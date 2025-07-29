@@ -392,6 +392,194 @@ def main():
         font-family: 'Rajdhani', sans-serif;
     }
     
+    /* Custom Chat Styling */
+    .stChatMessage {
+        background: transparent !important;
+        border: none !important;
+        padding: 0 !important;
+        margin: 1rem 0 !important;
+    }
+    
+    /* Hide default chat avatars */
+    .stChatMessage > div:first-child {
+        display: none !important;
+    }
+    
+    /* User Message Styling - Terminal Input Style */
+    .user-message {
+        background: linear-gradient(90deg, rgba(0, 255, 136, 0.1), rgba(0, 212, 255, 0.05));
+        border-left: 4px solid #00ff88;
+        border-radius: 0 12px 12px 0;
+        padding: 1rem 1.5rem;
+        margin: 1rem 0;
+        position: relative;
+        font-family: 'Rajdhani', monospace;
+        box-shadow: 0 0 20px rgba(0, 255, 136, 0.2);
+        backdrop-filter: blur(5px);
+    }
+    
+    .user-message::before {
+        content: ">";
+        position: absolute;
+        left: -2px;
+        top: 50%;
+        transform: translateY(-50%);
+        background: #00ff88;
+        color: #000;
+        width: 20px;
+        height: 20px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: bold;
+        font-size: 12px;
+        box-shadow: 0 0 10px rgba(0, 255, 136, 0.5);
+    }
+    
+    .user-message::after {
+        content: "";
+        position: absolute;
+        right: -1px;
+        top: 0;
+        bottom: 0;
+        width: 2px;
+        background: linear-gradient(180deg, #00ff88, transparent);
+        animation: dataPulse 2s infinite;
+    }
+    
+    /* AI Message Styling - Holographic Panel */
+    .ai-message {
+        background: linear-gradient(135deg, 
+            rgba(0, 212, 255, 0.1) 0%,
+            rgba(255, 0, 128, 0.1) 50%,
+            rgba(0, 255, 136, 0.05) 100%);
+        border: 1px solid rgba(0, 212, 255, 0.3);
+        border-radius: 15px;
+        padding: 1.5rem;
+        margin: 1rem 0;
+        position: relative;
+        backdrop-filter: blur(10px);
+        box-shadow: 0 8px 32px rgba(0, 212, 255, 0.2);
+        overflow: hidden;
+    }
+    
+    .ai-message::before {
+        content: "";
+        position: absolute;
+        top: -2px;
+        left: -2px;
+        right: -2px;
+        bottom: -2px;
+        background: linear-gradient(45deg, #00d4ff, #ff0080, #00ff88, #00d4ff);
+        background-size: 300% 300%;
+        animation: borderGlow 3s ease infinite;
+        border-radius: 15px;
+        z-index: -1;
+        opacity: 0.5;
+    }
+    
+    .ai-message::after {
+        content: "◇ CRYPTOMIND AI";
+        position: absolute;
+        top: -8px;
+        left: 20px;
+        background: linear-gradient(90deg, #00d4ff, #ff0080);
+        color: #000;
+        padding: 2px 8px;
+        font-size: 10px;
+        font-weight: bold;
+        border-radius: 4px;
+        font-family: 'Orbitron', monospace;
+        letter-spacing: 1px;
+    }
+    
+    /* Data stream effect for AI messages */
+    .ai-message .data-stream {
+        position: absolute;
+        right: 10px;
+        top: 10px;
+        width: 8px;
+        height: 8px;
+        background: #00ff88;
+        border-radius: 50%;
+        animation: dataPulse 1.5s infinite;
+        box-shadow: 0 0 10px #00ff88;
+    }
+    
+    .ai-message .data-stream::before {
+        content: "";
+        position: absolute;
+        right: 15px;
+        top: 0;
+        width: 6px;
+        height: 6px;
+        background: #00d4ff;
+        border-radius: 50%;
+        animation: dataPulse 1.5s infinite 0.3s;
+        box-shadow: 0 0 8px #00d4ff;
+    }
+    
+    .ai-message .data-stream::after {
+        content: "";
+        position: absolute;
+        right: 25px;
+        top: 1px;
+        width: 4px;
+        height: 4px;
+        background: #ff0080;
+        border-radius: 50%;
+        animation: dataPulse 1.5s infinite 0.6s;
+        box-shadow: 0 0 6px #ff0080;
+    }
+    
+    /* Animations */
+    @keyframes borderGlow {
+        0%, 100% { background-position: 0% 50%; }
+        50% { background-position: 100% 50%; }
+    }
+    
+    @keyframes dataPulse {
+        0%, 100% { opacity: 1; transform: scale(1); }
+        50% { opacity: 0.3; transform: scale(0.8); }
+    }
+    
+    /* Terminal cursor effect for user input */
+    .user-message .terminal-cursor {
+        display: inline-block;
+        width: 2px;
+        height: 1.2em;
+        background: #00ff88;
+        margin-left: 2px;
+        animation: cursorBlink 1s infinite;
+    }
+    
+    @keyframes cursorBlink {
+        0%, 50% { opacity: 1; }
+        51%, 100% { opacity: 0; }
+    }
+    
+    /* Glitch effect for user messages on hover */
+    .user-message:hover {
+        animation: glitchEffect 0.3s ease-in-out;
+    }
+    
+    @keyframes glitchEffect {
+        0% { transform: translateX(0); }
+        20% { transform: translateX(-2px); }
+        40% { transform: translateX(2px); }
+        60% { transform: translateX(-1px); }
+        80% { transform: translateX(1px); }
+        100% { transform: translateX(0); }
+    }
+    
+    /* Hologram effect for AI messages */
+    .ai-message:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 12px 40px rgba(0, 212, 255, 0.3);
+        transition: all 0.3s ease;
+    }
+    
     </style>
     """, unsafe_allow_html=True)
     
@@ -573,28 +761,39 @@ I only talk crypto stuff - that's my thing! Ask me about anything else and I'll 
         """
         st.session_state.messages.append({"role": "assistant", "content": welcome_msg})
     
-    # Display chat messages
+    # Display chat messages with custom styling
     for message in st.session_state.messages:
-        with st.chat_message(message["role"]):
-            st.markdown(message["content"], unsafe_allow_html=True)
+        if message["role"] == "user":
+            # Custom user message with terminal styling
+            st.markdown(f"""
+            <div class="user-message">
+                <strong style="color: #00ff88; font-family: 'Orbitron', monospace;">USER_INPUT:</strong> {message["content"]}
+                <div class="terminal-cursor"></div>
+            </div>
+            """, unsafe_allow_html=True)
+        else:
+            # Custom AI message with holographic styling
+            st.markdown(f"""
+            <div class="ai-message">
+                <div class="data-stream"></div>
+                {message["content"]}
+            </div>
+            """, unsafe_allow_html=True)
     
     # Chat input with enhanced styling
     if prompt := st.chat_input("🔮 Ask me anything about crypto..."):
         # Add user message to chat history
         st.session_state.messages.append({"role": "user", "content": prompt})
         
-        # Display user message
-        with st.chat_message("user"):
-            st.write(f"💬 **You:** {prompt}")
-        
         # Generate and display assistant response
-        with st.chat_message("assistant"):
-            with st.spinner("🧠 Thinking about your crypto question..."):
-                response = st.session_state.chatbot.process_query(prompt)
-                st.markdown(response, unsafe_allow_html=True)
-                
-                # Add assistant response to chat history
-                st.session_state.messages.append({"role": "assistant", "content": response})
+        with st.spinner("🧠 Thinking about your crypto question..."):
+            response = st.session_state.chatbot.process_query(prompt)
+            
+            # Add assistant response to chat history
+            st.session_state.messages.append({"role": "assistant", "content": response})
+        
+        # Rerun to show new messages with custom styling
+        st.rerun()
 
 if __name__ == "__main__":
     main()
