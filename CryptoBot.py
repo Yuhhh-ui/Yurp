@@ -8,13 +8,14 @@ import re
 
 # Page configuration
 st.set_page_config(
-    page_title="Crypto Assistant",
-    page_icon="₿",
-    layout="wide"
+    page_title="CryptoMind AI",
+    page_icon="🚀",
+    layout="wide",
+    initial_sidebar_state="expanded"
 )
 
 # API Configuration - ADD YOUR GEMINI API KEY HERE
-GEMINI_API_KEY = "AIzaSyB8gVz_X5Uo36pBWaLKZqYjSGD0WMy5pO8"  
+GEMINI_API_KEY = "YOUR_GEMINI_API_KEY_HERE"  # Replace with your actual API key
 COINGECKO_BASE_URL = "https://api.coingecko.com/api/v3"
 
 class CryptoChatbot:
@@ -237,106 +238,184 @@ Please provide a helpful response about this cryptocurrency topic:"""
             return "Sorry, I couldn't fetch market data right now."
 
 def main():
-    st.title("🚀 Cryptocurrency Assistant")
-    st.markdown("Your AI-powered crypto companion that ONLY talks about cryptocurrency!")
+    # Load the crypto theme
+    load_crypto_theme()
+    
+    # Custom header with crypto styling
+    st.markdown("""
+    <div class="main-header">
+        🚀 CRYPTOMIND AI 🤖
+    </div>
+    <div class="sub-header">
+        ⚡ Your Elite Cryptocurrency Intelligence Agent ⚡<br>
+        <span style="color: #00ff88;">🔮 Powered by Advanced AI • Real-Time Market Data • Blockchain Insights 🔮</span>
+    </div>
+    """, unsafe_allow_html=True)
     
     # Check if API key is configured
     if GEMINI_API_KEY == "YOUR_GEMINI_API_KEY_HERE":
-        st.error("❌ **API Key Not Configured!**")
-        st.markdown("Please replace `YOUR_GEMINI_API_KEY_HERE` in the code with your actual Gemini API key.")
-        st.markdown("**How to get a Gemini API key:**")
-        st.markdown("1. Go to https://makersuite.google.com/app/apikey")
-        st.markdown("2. Sign in with your Google account")
-        st.markdown("3. Click 'Create API Key'")
-        st.markdown("4. Replace the placeholder in the code with your key")
+        st.markdown("""
+        <div class="status-error">
+        ❌ <strong>NEURAL NETWORK OFFLINE</strong><br>
+        API Key required to activate CryptoMind AI system
+        </div>
+        """, unsafe_allow_html=True)
+        
+        st.markdown("""
+        <div class="feature-list">
+        <strong>🔑 Activation Protocol:</strong><br>
+        1. Navigate to → https://makersuite.google.com/app/apikey<br>
+        2. Authenticate with Google credentials<br>
+        3. Generate new API key<br>
+        4. Replace placeholder in source code<br>
+        5. Deploy CryptoMind AI system
+        </div>
+        """, unsafe_allow_html=True)
         return
     
     # Sidebar with quick actions
     with st.sidebar:
-        st.header("🎛️ Quick Actions")
+        st.markdown('<div class="sidebar-header">⚡ CONTROL PANEL ⚡</div>', unsafe_allow_html=True)
         
         # Initialize chatbot
         if 'chatbot' not in st.session_state:
             try:
                 st.session_state.chatbot = CryptoChatbot(GEMINI_API_KEY)
-                st.success("✅ Gemini AI model loaded successfully!")
+                st.markdown("""
+                <div class="status-success glow-text">
+                ✅ CryptoMind AI: ONLINE<br>
+                🧠 Neural networks activated<br>
+                🔗 Blockchain connection established
+                </div>
+                """, unsafe_allow_html=True)
             except Exception as e:
-                st.error(f"❌ Error initializing Gemini: {str(e)}")
-                st.markdown("**Troubleshooting:**")
-                st.markdown("1. Check if your API key is correct")
-                st.markdown("2. Make sure you have internet connection")
-                st.markdown("3. Try refreshing the page")
+                st.markdown(f"""
+                <div class="status-error">
+                ❌ <strong>SYSTEM ERROR</strong><br>
+                {str(e)}<br><br>
+                <strong>Diagnostic Check:</strong><br>
+                • Verify API key integrity<br>
+                • Check network connectivity<br>
+                • Restart system if needed
+                </div>
+                """, unsafe_allow_html=True)
                 return
         
-        if st.button("🔥 Show Trending"):
-            response = st.session_state.chatbot.handle_trending_query()
-            if 'messages' not in st.session_state:
-                st.session_state.messages = []
-            st.session_state.messages.append({"role": "assistant", "content": response})
-            st.rerun()
+        st.markdown("---")
         
-        if st.button("📊 Market Overview"):
-            response = st.session_state.chatbot.handle_market_query()
-            if 'messages' not in st.session_state:
-                st.session_state.messages = []
-            st.session_state.messages.append({"role": "assistant", "content": response})
-            st.rerun()
+        # Quick action buttons with crypto styling
+        col1, col2 = st.columns(2)
         
-        if st.button("💰 Bitcoin Price"):
-            response = st.session_state.chatbot.handle_price_query("bitcoin")
-            if 'messages' not in st.session_state:
-                st.session_state.messages = []
-            st.session_state.messages.append({"role": "assistant", "content": response})
-            st.rerun()
+        with col1:
+            if st.button("🔥 TRENDING"):
+                response = st.session_state.chatbot.handle_trending_query()
+                if 'messages' not in st.session_state:
+                    st.session_state.messages = []
+                st.session_state.messages.append({"role": "assistant", "content": response})
+                st.rerun()
+            
+            if st.button("💰 BTC PRICE"):
+                response = st.session_state.chatbot.handle_price_query("bitcoin")
+                if 'messages' not in st.session_state:
+                    st.session_state.messages = []
+                st.session_state.messages.append({"role": "assistant", "content": response})
+                st.rerun()
         
-        if st.button("🔄 Clear Chat"):
-            st.session_state.messages = []
-            st.rerun()
+        with col2:
+            if st.button("📊 MARKETS"):
+                response = st.session_state.chatbot.handle_market_query()
+                if 'messages' not in st.session_state:
+                    st.session_state.messages = []
+                st.session_state.messages.append({"role": "assistant", "content": response})
+                st.rerun()
+            
+            if st.button("🔄 RESET"):
+                st.session_state.messages = []
+                st.rerun()
         
         st.markdown("---")
-        st.markdown("**Features:**")
-        st.markdown("• Gemini AI answers crypto questions")
-        st.markdown("• Real-time price data")
-        st.markdown("• Market trends & analysis")
-        st.markdown("• ONLY crypto topics allowed")
-        st.markdown("• No API key input required!")
+        
+        # Features section with crypto styling
+        st.markdown("""
+        <div class="feature-list">
+        <div class="sidebar-header">🛡️ CAPABILITIES</div>
+        
+        <strong>🤖 AI-Powered Analysis</strong><br>
+        • Advanced crypto intelligence<br>
+        • Market sentiment analysis<br>
+        • Real-time data processing<br><br>
+        
+        <strong>⚡ Lightning Features</strong><br>
+        • Instant price updates<br>
+        • Trending coin detection<br>
+        • Market overview analytics<br><br>
+        
+        <strong>🔒 Security Protocol</strong><br>
+        • Crypto-only conversations<br>
+        • Secure API connections<br>
+        • Protected data streams<br>
+        </div>
+        """, unsafe_allow_html=True)
     
     # Initialize chatbot
     if 'chatbot' not in st.session_state:
         try:
             st.session_state.chatbot = CryptoChatbot(GEMINI_API_KEY)
         except Exception as e:
-            st.error(f"❌ Error initializing Gemini: {str(e)}")
-            st.markdown("**Please check:**")
-            st.markdown("1. Your API key is correct")
-            st.markdown("2. You have internet connection")
-            st.markdown("3. Try refreshing the page")
+            st.markdown(f"""
+            <div class="status-error">
+            ❌ <strong>CRITICAL SYSTEM FAILURE</strong><br>
+            Error: {str(e)}<br><br>
+            <strong>Recovery Options:</strong><br>
+            • Verify API key authentication<br>
+            • Check network connectivity<br>
+            • Refresh application instance
+            </div>
+            """, unsafe_allow_html=True)
             return
     
-    # Initialize chat history
+    # Initialize chat history with enhanced welcome message
     if "messages" not in st.session_state:
         st.session_state.messages = []
         welcome_msg = """
-🤖 **Welcome to your Crypto Assistant!** 
+<div class="welcome-container">
 
-I'm here to answer ANY cryptocurrency-related questions you have! I can help you with:
+# 🤖 **CRYPTOMIND AI ACTIVATED** 🤖
 
-💡 **General Crypto Knowledge:** Blockchain basics, how cryptocurrencies work, DeFi, NFTs
-📊 **Market Analysis:** Price predictions, market trends, trading strategies  
-🔍 **Specific Coins:** Information about Bitcoin, Ethereum, altcoins, new projects
-⚡ **Real-time Data:** Current prices, trending coins, market overview
-🎓 **Learning:** Crypto terminology, investment tips, security best practices
+### ⚡ **NEURAL NETWORK STATUS: ONLINE** ⚡
 
-**Try asking me:**
-- "What is Bitcoin and how does it work?"
-- "Should I invest in Ethereum right now?"
-- "What's the difference between DeFi and traditional finance?"
-- "Bitcoin price" (for real-time data)
-- "Show trending coins"
+---
 
-❌ **Note:** I ONLY discuss cryptocurrency topics. I won't answer questions about other subjects!
+## 🚀 **MISSION BRIEFING** 🚀
 
-What would you like to know about crypto? 🚀
+**Agent**, I am your advanced cryptocurrency intelligence system. My neural networks are trained on:
+
+### 💎 **CORE CAPABILITIES**
+- **🧠 Deep Blockchain Analysis** → Understanding crypto fundamentals, DeFi protocols, NFT ecosystems
+- **📊 Real-Time Market Intelligence** → Live price feeds, trend analysis, market predictions  
+- **🔍 Asset Research** → Bitcoin, Ethereum, altcoins, emerging projects, tokenomics
+- **⚡ Lightning-Fast Data** → Current prices, trending coins, market overviews
+- **🎓 Crypto Education** → Trading strategies, security protocols, investment guidance
+
+### 🎯 **QUICK COMMANDS**
+```
+"What is Bitcoin halving and when is the next one?"
+"Should I invest in Ethereum right now?"
+"Explain DeFi yield farming like I'm 5"
+"Bitcoin price" → Instant market data
+"Show trending coins" → Hot crypto assets
+```
+
+### 🛡️ **SECURITY PROTOCOL**
+> **WARNING**: I operate under strict crypto-only protocols. Non-cryptocurrency queries will be rejected to maintain system integrity.
+
+---
+
+## 🔮 **READY FOR CRYPTO INTELLIGENCE QUERIES** 🔮
+
+**What cryptocurrency secrets shall we unlock today, Agent?** 🕵️‍♂️
+
+</div>
         """
         st.session_state.messages.append({"role": "assistant", "content": welcome_msg})
     
@@ -345,18 +424,18 @@ What would you like to know about crypto? 🚀
         with st.chat_message(message["role"]):
             st.markdown(message["content"], unsafe_allow_html=True)
     
-    # Chat input
-    if prompt := st.chat_input("Ask me anything about cryptocurrency..."):
+    # Chat input with enhanced styling
+    if prompt := st.chat_input("🔮 Enter your crypto intelligence query..."):
         # Add user message to chat history
         st.session_state.messages.append({"role": "user", "content": prompt})
         
         # Display user message
         with st.chat_message("user"):
-            st.write(prompt)
+            st.write(f"🕵️ **Agent Query:** {prompt}")
         
         # Generate and display assistant response
         with st.chat_message("assistant"):
-            with st.spinner("Thinking about crypto..."):
+            with st.spinner("🧠 CryptoMind AI analyzing blockchain data..."):
                 response = st.session_state.chatbot.process_query(prompt)
                 st.markdown(response, unsafe_allow_html=True)
                 
