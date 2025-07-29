@@ -20,7 +20,14 @@ class CryptoChatbot:
     def __init__(self, gemini_api_key):
         # Configure Gemini API
         genai.configure(api_key=gemini_api_key)
-        self.model = genai.GenerativeModel('gemini-pro')
+        # Updated model name - try the latest available model
+        try:
+            self.model = genai.GenerativeModel('gemini-1.5-flash')
+        except:
+            try:
+                self.model = genai.GenerativeModel('gemini-1.0-pro')
+            except:
+                self.model = genai.GenerativeModel('models/gemini-pro')
         
         self.supported_coins = [
             'bitcoin', 'ethereum', 'binancecoin', 'cardano', 'solana',
@@ -259,7 +266,16 @@ def main():
         
         # Initialize chatbot
         if 'chatbot' not in st.session_state:
-            st.session_state.chatbot = CryptoChatbot(gemini_api_key)
+            try:
+                st.session_state.chatbot = CryptoChatbot(gemini_api_key)
+                st.success("✅ Gemini AI model loaded successfully!")
+            except Exception as e:
+                st.error(f"❌ Error initializing Gemini: {str(e)}")
+                st.markdown("**Troubleshooting:**")
+                st.markdown("1. Check if your API key is correct")
+                st.markdown("2. Make sure you have internet connection")
+                st.markdown("3. Try refreshing the page")
+                return
         
         if st.button("🔥 Show Trending"):
             response = st.session_state.chatbot.handle_trending_query()
@@ -297,7 +313,15 @@ def main():
     # Initialize chatbot with API key
     if gemini_api_key:
         if 'chatbot' not in st.session_state:
-            st.session_state.chatbot = CryptoChatbot(gemini_api_key)
+            try:
+                st.session_state.chatbot = CryptoChatbot(gemini_api_key)
+            except Exception as e:
+                st.error(f"❌ Error initializing Gemini: {str(e)}")
+                st.markdown("**Please check:**")
+                st.markdown("1. Your API key is correct")
+                st.markdown("2. You have internet connection")
+                st.markdown("3. Try a different API key")
+                return
         
         # Initialize chat history
         if "messages" not in st.session_state:
