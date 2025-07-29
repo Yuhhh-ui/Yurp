@@ -238,8 +238,144 @@ Please provide a helpful response about this cryptocurrency topic:"""
             return "Sorry, I couldn't fetch market data right now."
 
 def main():
-    # Load the crypto theme
-    load_crypto_theme()
+    # Load the crypto theme CSS
+    st.markdown("""
+    <style>
+    /* Import cyber fonts */
+    @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Rajdhani:wght@300;400;600;700&display=swap');
+    
+    /* Main app styling */
+    .stApp {
+        background: linear-gradient(135deg, 
+            #0a0a0a 0%, 
+            #1a1a2e 25%, 
+            #16213e 50%, 
+            #0f0f23 75%, 
+            #000000 100%);
+        color: #00ff88;
+    }
+    
+    /* Header styling */
+    .main-header {
+        text-align: center;
+        padding: 2rem 0;
+        background: linear-gradient(90deg, #00ff88, #00d4ff, #ff0080, #00ff88);
+        background-size: 300% 300%;
+        animation: gradientShift 3s ease infinite;
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+        font-family: 'Orbitron', monospace;
+        font-weight: 900;
+        font-size: 3.5rem;
+        text-shadow: 0 0 30px rgba(0, 255, 136, 0.5);
+        margin-bottom: 1rem;
+    }
+    
+    @keyframes gradientShift {
+        0% { background-position: 0% 50%; }
+        50% { background-position: 100% 50%; }
+        100% { background-position: 0% 50%; }
+    }
+    
+    .sub-header {
+        text-align: center;
+        color: #888;
+        font-family: 'Rajdhani', sans-serif;
+        font-size: 1.2rem;
+        margin-bottom: 2rem;
+        padding: 0 2rem;
+    }
+    
+    /* Button styling */
+    .stButton > button {
+        background: linear-gradient(45deg, #00ff88, #00d4ff);
+        color: #000;
+        border: none;
+        border-radius: 8px;
+        font-family: 'Rajdhani', sans-serif;
+        font-weight: 600;
+        font-size: 1rem;
+        padding: 0.7rem 1.5rem;
+        transition: all 0.3s ease;
+        box-shadow: 0 4px 15px rgba(0, 255, 136, 0.3);
+        text-transform: uppercase;
+        letter-spacing: 1px;
+    }
+    
+    .stButton > button:hover {
+        background: linear-gradient(45deg, #ff0080, #00ff88);
+        transform: translateY(-2px);
+        box-shadow: 0 6px 20px rgba(255, 0, 128, 0.4);
+    }
+    
+    /* Sidebar headers */
+    .sidebar-header {
+        color: #00ff88;
+        font-family: 'Orbitron', monospace;
+        font-weight: 700;
+        font-size: 1.3rem;
+        text-align: center;
+        margin-bottom: 1rem;
+        text-shadow: 0 0 10px rgba(0, 255, 136, 0.5);
+    }
+    
+    /* Feature list styling */
+    .feature-list {
+        background: rgba(0, 255, 136, 0.05);
+        border-left: 3px solid #00ff88;
+        padding: 1rem;
+        margin: 1rem 0;
+        border-radius: 0 8px 8px 0;
+        font-family: 'Rajdhani', sans-serif;
+    }
+    
+    /* Status indicators */
+    .status-success {
+        color: #00ff88;
+        background: rgba(0, 255, 136, 0.1);
+        padding: 0.5rem 1rem;
+        border-radius: 6px;
+        border-left: 4px solid #00ff88;
+        font-family: 'Rajdhani', sans-serif;
+        font-weight: 600;
+    }
+    
+    .status-error {
+        color: #ff0080;
+        background: rgba(255, 0, 128, 0.1);
+        padding: 0.5rem 1rem;
+        border-radius: 6px;
+        border-left: 4px solid #ff0080;
+        font-family: 'Rajdhani', sans-serif;
+        font-weight: 600;
+    }
+    
+    /* Glowing effects */
+    .glow-text {
+        text-shadow: 0 0 10px currentColor;
+        animation: pulse 2s infinite;
+    }
+    
+    @keyframes pulse {
+        0%, 100% { opacity: 1; }
+        50% { opacity: 0.7; }
+    }
+    
+    /* Welcome message styling */
+    .welcome-container {
+        background: linear-gradient(135deg, rgba(0, 255, 136, 0.1), rgba(0, 212, 255, 0.1));
+        border: 2px solid #00ff88;
+        border-radius: 15px;
+        padding: 2rem;
+        margin: 1rem 0;
+        box-shadow: 0 0 30px rgba(0, 255, 136, 0.3);
+        backdrop-filter: blur(10px);
+        font-family: 'Rajdhani', sans-serif;
+    }
+    
+    </style>
+    """, unsafe_allow_html=True)
     
     # Custom header with crypto styling
     st.markdown("""
