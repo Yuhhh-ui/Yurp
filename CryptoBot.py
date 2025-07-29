@@ -129,37 +129,51 @@ class CryptoChatbot:
         
         # First check if the question is crypto-related
         if not self.is_crypto_related(user_question):
-            return "🚫 I'm sorry, but I can only answer questions related to cryptocurrency, blockchain, and digital assets. Please ask me something about crypto!"
+            return "🚫 Hey! I'm only here to chat about crypto stuff - Bitcoin, Ethereum, NFTs, all that good stuff. Hit me with a crypto question! 😄"
         
         try:
             # Get current market data for context
             market_context = self.get_current_market_data()
             
             # Create prompt for Gemini
-            prompt = f"""You are a cryptocurrency expert assistant. You ONLY answer questions related to cryptocurrency, blockchain, digital assets, DeFi, NFTs, and related topics.
+            prompt = f"""You are a cool, teen-friendly cryptocurrency assistant. You're talking to young people (ages 15-30) who want to learn about crypto.
 
-STRICT RULES:
-1. ONLY respond to cryptocurrency-related questions
-2. If asked about non-crypto topics, politely decline and redirect to crypto topics
-3. Provide accurate, helpful information about cryptocurrencies
-4. Use current market data when relevant
-5. Be conversational but informative
-6. Use emojis occasionally to make responses engaging
-7. Keep responses concise but informative (under 300 words)
+PERSONALITY:
+- Be friendly, enthusiastic, and relatable
+- Use simple, everyday language (no fancy financial jargon)
+- Be like a knowledgeable friend explaining crypto
+- Use emojis but don't overdo it
+- Keep it real and honest about risks
+- Make complex topics easy to understand
+
+RULES:
+1. ONLY answer crypto-related questions
+2. If it's not about crypto, redirect nicely to crypto topics
+3. Explain things simply but accurately
+4. Use current market data when it helps
+5. Keep responses under 250 words
+6. Be encouraging but realistic about crypto investing
+7. Always mention that crypto is risky
+
+TONE EXAMPLES:
+- Instead of "utilize" say "use"
+- Instead of "substantial" say "big" or "huge"
+- Instead of "fluctuations" say "price changes"
+- Instead of "portfolio diversification" say "spreading your money around"
 
 Current Market Context:
 {market_context}
 
 User Question: {user_question}
 
-Please provide a helpful response about this cryptocurrency topic:"""
+Give a helpful, friendly response:"""
 
             response = self.model.generate_content(prompt)
             
             return response.text
             
         except Exception as e:
-            return f"Sorry, I encountered an error while processing your question: {str(e)}"
+            return f"Oops! Something went wrong on my end 😅 Try asking again in a sec: {str(e)}"
     
     def process_query(self, user_input):
         """Process user query and return appropriate response"""
@@ -192,34 +206,38 @@ Please provide a helpful response about this cryptocurrency topic:"""
             volume_24h = coin_data.get('usd_24h_vol', 0)
             
             change_emoji = "📈" if change_24h > 0 else "📉"
+            change_text = "going up" if change_24h > 0 else "going down"
             change_color = "green" if change_24h > 0 else "red"
             
             response = f"""
-**{coin_id.replace('-', ' ').title()} Price Information** ₿
+**{coin_id.replace('-', ' ').title()} Right Now** 💰
 
-💰 **Current Price:** ${price:,.2f}
-{change_emoji} **24h Change:** <span style='color:{change_color}'>{change_24h:+.2f}%</span>
-📊 **Market Cap:** ${market_cap:,.0f}
-💹 **24h Volume:** ${volume_24h:,.0f}
+💵 **Price:** ${price:,.2f}
+{change_emoji} **24h:** <span style='color:{change_color}'>{change_24h:+.2f}%</span> ({change_text})
+📊 **Market Size:** ${market_cap:,.0f}
+💹 **Daily Trading:** ${volume_24h:,.0f}
 
-*Data updated: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')} UTC*
+*Updated: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')} UTC*
+
+Remember: Crypto prices change super fast! ⚡
             """
             return response
         else:
-            return f"Sorry, I couldn't fetch the price data for {coin_id}. Please try again later."
+            return f"Hmm, couldn't grab the price for {coin_id} right now 🤔 Maybe try again in a bit?"
     
     def handle_trending_query(self):
         """Handle trending coins query"""
         trending_data = self.get_trending_coins()
         if trending_data:
             trending_coins = trending_data['coins'][:5]
-            response = "**🔥 Trending Cryptocurrencies:**\n\n"
+            response = "**🔥 What's Hot Right Now:**\n\n"
             for i, coin in enumerate(trending_coins, 1):
                 response += f"{i}. **{coin['item']['name']}** ({coin['item']['symbol'].upper()})\n"
-                response += f"   Rank: #{coin['item']['market_cap_rank']}\n\n"
+                response += f"   Market Rank: #{coin['item']['market_cap_rank']}\n\n"
+            response += "*These are the coins everyone's talking about today! 🚀*"
             return response
         else:
-            return "Sorry, I couldn't fetch trending data right now."
+            return "Can't get the trending list right now 😕 Try again in a moment!"
     
     def handle_market_query(self):
         """Handle market overview query"""
@@ -227,15 +245,15 @@ Please provide a helpful response about this cryptocurrency topic:"""
         if market_data:
             df = pd.DataFrame(market_data)
             df_display = df[['name', 'symbol', 'current_price', 'price_change_percentage_24h', 'market_cap']].copy()
-            df_display.columns = ['Name', 'Symbol', 'Price (USD)', '24h Change (%)', 'Market Cap']
-            df_display['Price (USD)'] = df_display['Price (USD)'].apply(lambda x: f"${x:,.2f}")
-            df_display['24h Change (%)'] = df_display['24h Change (%)'].apply(lambda x: f"{x:+.2f}%")
+            df_display.columns = ['Coin', 'Symbol', 'Price', '24h Change', 'Market Cap']
+            df_display['Price'] = df_display['Price'].apply(lambda x: f"${x:,.2f}")
+            df_display['24h Change'] = df_display['24h Change'].apply(lambda x: f"{x:+.2f}%")
             df_display['Market Cap'] = df_display['Market Cap'].apply(lambda x: f"${x:,.0f}")
             
             st.dataframe(df_display, use_container_width=True)
-            return "**📊 Top 10 Cryptocurrencies by Market Cap:**"
+            return "**📊 Top 10 Biggest Cryptos Right Now:**\n\n*These are ranked by how much they're worth in total! 💎*"
         else:
-            return "Sorry, I couldn't fetch market data right now."
+            return "Oops! Can't load the market data right now 📊 Give it another shot!"
 
 def main():
     # Load the crypto theme CSS
@@ -383,8 +401,8 @@ def main():
         🚀 CRYPTOMIND AI 🤖
     </div>
     <div class="sub-header">
-        ⚡ Your Elite Cryptocurrency Intelligence Agent ⚡<br>
-        <span style="color: #00ff88;">🔮 Powered by Advanced AI • Real-Time Market Data • Blockchain Insights 🔮</span>
+        ⚡ Your Crypto Buddy That Actually Gets It ⚡<br>
+        <span style="color: #00ff88;">🔮 Smart AI • Live Prices • Easy Explanations 🔮</span>
     </div>
     """, unsafe_allow_html=True)
     
@@ -392,26 +410,26 @@ def main():
     if GEMINI_API_KEY == "YOUR_GEMINI_API_KEY_HERE":
         st.markdown("""
         <div class="status-error">
-        ❌ <strong>NEURAL NETWORK OFFLINE</strong><br>
-        API Key required to activate CryptoMind AI system
+        ❌ <strong>OOPS! NEED TO SET UP API</strong><br>
+        Need your Google AI key to get this working
         </div>
         """, unsafe_allow_html=True)
         
         st.markdown("""
         <div class="feature-list">
-        <strong>🔑 Activation Protocol:</strong><br>
-        1. Navigate to → https://makersuite.google.com/app/apikey<br>
-        2. Authenticate with Google credentials<br>
-        3. Generate new API key<br>
-        4. Replace placeholder in source code<br>
-        5. Deploy CryptoMind AI system
+        <strong>🔑 Quick Setup:</strong><br>
+        1. Go to → https://makersuite.google.com/app/apikey<br>
+        2. Sign in with Google<br>
+        3. Create a new API key<br>
+        4. Put it in the code where it says "YOUR_GEMINI_API_KEY_HERE"<br>
+        5. You're good to go! 🚀
         </div>
         """, unsafe_allow_html=True)
         return
     
     # Sidebar with quick actions
     with st.sidebar:
-        st.markdown('<div class="sidebar-header">⚡ CONTROL PANEL ⚡</div>', unsafe_allow_html=True)
+        st.markdown('<div class="sidebar-header">⚡ QUICK STUFF ⚡</div>', unsafe_allow_html=True)
         
         # Initialize chatbot
         if 'chatbot' not in st.session_state:
@@ -419,20 +437,20 @@ def main():
                 st.session_state.chatbot = CryptoChatbot(GEMINI_API_KEY)
                 st.markdown("""
                 <div class="status-success glow-text">
-                ✅ CryptoMind AI: ONLINE<br>
-                🧠 Neural networks activated<br>
-                🔗 Blockchain connection established
+                ✅ CryptoMind AI: Ready!<br>
+                🧠 AI brain loaded<br>
+                🔗 Connected to crypto data
                 </div>
                 """, unsafe_allow_html=True)
             except Exception as e:
                 st.markdown(f"""
                 <div class="status-error">
-                ❌ <strong>SYSTEM ERROR</strong><br>
-                {str(e)}<br><br>
-                <strong>Diagnostic Check:</strong><br>
-                • Verify API key integrity<br>
-                • Check network connectivity<br>
-                • Restart system if needed
+                ❌ <strong>UH OH!</strong><br>
+                Something's not working: {str(e)}<br><br>
+                <strong>Try This:</strong><br>
+                • Check your internet<br>
+                • Make sure the API key is right<br>
+                • Refresh the page
                 </div>
                 """, unsafe_allow_html=True)
                 return
@@ -458,14 +476,14 @@ def main():
                 st.rerun()
         
         with col2:
-            if st.button("📊 MARKETS"):
+            if st.button("📊 TOP COINS"):
                 response = st.session_state.chatbot.handle_market_query()
                 if 'messages' not in st.session_state:
                     st.session_state.messages = []
                 st.session_state.messages.append({"role": "assistant", "content": response})
                 st.rerun()
             
-            if st.button("🔄 RESET"):
+            if st.button("🔄 CLEAR CHAT"):
                 st.session_state.messages = []
                 st.rerun()
         
@@ -474,22 +492,22 @@ def main():
         # Features section with crypto styling
         st.markdown("""
         <div class="feature-list">
-        <div class="sidebar-header">🛡️ CAPABILITIES</div>
+        <div class="sidebar-header">🛡️ WHAT I CAN DO</div>
         
-        <strong>🤖 AI-Powered Analysis</strong><br>
-        • Advanced crypto intelligence<br>
-        • Market sentiment analysis<br>
-        • Real-time data processing<br><br>
+        <strong>🤖 Smart Crypto Help</strong><br>
+        • Explain crypto in simple terms<br>
+        • Help you understand the market<br>
+        • Answer all your crypto questions<br><br>
         
-        <strong>⚡ Lightning Features</strong><br>
-        • Instant price updates<br>
-        • Trending coin detection<br>
-        • Market overview analytics<br><br>
+        <strong>⚡ Live Data</strong><br>
+        • Real-time prices<br>
+        • What's trending now<br>
+        • Market overviews<br><br>
         
-        <strong>🔒 Security Protocol</strong><br>
-        • Crypto-only conversations<br>
-        • Secure API connections<br>
-        • Protected data streams<br>
+        <strong>🔒 Safe Space</strong><br>
+        • Only talk about crypto<br>
+        • No weird stuff<br>
+        • Always honest about risks<br>
         </div>
         """, unsafe_allow_html=True)
     
@@ -500,12 +518,12 @@ def main():
         except Exception as e:
             st.markdown(f"""
             <div class="status-error">
-            ❌ <strong>CRITICAL SYSTEM FAILURE</strong><br>
+            ❌ <strong>SOMETHING WENT WRONG</strong><br>
             Error: {str(e)}<br><br>
-            <strong>Recovery Options:</strong><br>
-            • Verify API key authentication<br>
-            • Check network connectivity<br>
-            • Refresh application instance
+            <strong>Quick Fixes:</strong><br>
+            • Check your API key<br>
+            • Make sure you're online<br>
+            • Try refreshing
             </div>
             """, unsafe_allow_html=True)
             return
@@ -516,40 +534,40 @@ def main():
         welcome_msg = """
 <div class="welcome-container">
 
-# 🤖 **CRYPTOMIND AI ACTIVATED** 🤖
+# 🤖 **HEY! CRYPTOMIND AI HERE** 🤖
 
-### ⚡ **NEURAL NETWORK STATUS: ONLINE** ⚡
-
----
-
-## 🚀 **MISSION BRIEFING** 🚀
-
-**Agent**, I am your advanced cryptocurrency intelligence system. My neural networks are trained on:
-
-### 💎 **CORE CAPABILITIES**
-- **🧠 Deep Blockchain Analysis** → Understanding crypto fundamentals, DeFi protocols, NFT ecosystems
-- **📊 Real-Time Market Intelligence** → Live price feeds, trend analysis, market predictions  
-- **🔍 Asset Research** → Bitcoin, Ethereum, altcoins, emerging projects, tokenomics
-- **⚡ Lightning-Fast Data** → Current prices, trending coins, market overviews
-- **🎓 Crypto Education** → Trading strategies, security protocols, investment guidance
-
-### 🎯 **QUICK COMMANDS**
-```
-"What is Bitcoin halving and when is the next one?"
-"Should I invest in Ethereum right now?"
-"Explain DeFi yield farming like I'm 5"
-"Bitcoin price" → Instant market data
-"Show trending coins" → Hot crypto assets
-```
-
-### 🛡️ **SECURITY PROTOCOL**
-> **WARNING**: I operate under strict crypto-only protocols. Non-cryptocurrency queries will be rejected to maintain system integrity.
+### ⚡ **READY TO TALK CRYPTO!** ⚡
 
 ---
 
-## 🔮 **READY FOR CRYPTO INTELLIGENCE QUERIES** 🔮
+## 🚀 **WHAT'S UP?** 🚀
 
-**What cryptocurrency secrets shall we unlock today, Agent?** 🕵️‍♂️
+I'm your crypto buddy who actually makes sense of all this Bitcoin and blockchain stuff! 
+
+### 💎 **HERE'S WHAT I'M GOOD AT:**
+- **🧠 Making Crypto Simple** → No confusing jargon, just straight talk about Bitcoin, Ethereum, NFTs, and more
+- **📊 Live Market Updates** → Current prices, trending coins, what's hot right now  
+- **🔍 Coin Research** → Want to know about a specific crypto? I got you covered
+- **⚡ Quick Data** → Just ask for prices or trending coins and I'll hook you up
+- **🎓 Learning Made Easy** → Trading basics, how to stay safe, investment tips that actually make sense
+
+### 🎯 **TRY ASKING ME STUFF LIKE:**
+```
+"What's Bitcoin and why should I care?"
+"Is it a good time to buy Ethereum?"
+"Explain NFTs like I'm not a tech genius"
+"Bitcoin price" → Get the current price instantly
+"What's trending?" → See what coins are hot
+```
+
+### 🛡️ **HEADS UP**
+I only talk crypto stuff - that's my thing! Ask me about anything else and I'll redirect you back to the good stuff 😄
+
+---
+
+## 🔮 **SO... WHAT DO YOU WANT TO KNOW ABOUT CRYPTO?** 🔮
+
+*I'm here to help you understand this wild world of digital money! 🚀*
 
 </div>
         """
@@ -561,17 +579,17 @@ def main():
             st.markdown(message["content"], unsafe_allow_html=True)
     
     # Chat input with enhanced styling
-    if prompt := st.chat_input("🔮 Enter your crypto intelligence query..."):
+    if prompt := st.chat_input("🔮 Ask me anything about crypto..."):
         # Add user message to chat history
         st.session_state.messages.append({"role": "user", "content": prompt})
         
         # Display user message
         with st.chat_message("user"):
-            st.write(f"🕵️ **Agent Query:** {prompt}")
+            st.write(f"💬 **You:** {prompt}")
         
         # Generate and display assistant response
         with st.chat_message("assistant"):
-            with st.spinner("🧠 CryptoMind AI analyzing blockchain data..."):
+            with st.spinner("🧠 Thinking about your crypto question..."):
                 response = st.session_state.chatbot.process_query(prompt)
                 st.markdown(response, unsafe_allow_html=True)
                 
