@@ -3,8 +3,8 @@ import requests
 import json
 from datetime import datetime
 import pandas as pd
-import plotly.graph_objects as go
-from plotly.subplots import make_subplots
+import google.generativeai as genai
+import re
 
 # Page configuration
 st.set_page_config(
@@ -17,11 +17,35 @@ st.set_page_config(
 COINGECKO_BASE_URL = "https://api.coingecko.com/api/v3"
 
 class CryptoChatbot:
-    def __init__(self):
+    def __init__(self, gemini_api_key):
+        # Configure Gemini API
+        genai.configure(api_key=gemini_api_key)
+        self.model = genai.GenerativeModel('gemini-pro')
+        
         self.supported_coins = [
             'bitcoin', 'ethereum', 'binancecoin', 'cardano', 'solana',
-            'polkadot', 'dogecoin', 'avalanche-2', 'chainlink', 'polygon'
+            'polkadot', 'dogecoin', 'avalanche-2', 'chainlink', 'polygon',
+            'ripple', 'litecoin', 'stellar', 'monero', 'tron'
         ]
+        
+        # Crypto-related keywords for filtering
+        self.crypto_keywords = [
+            'bitcoin', 'btc', 'ethereum', 'eth', 'cryptocurrency', 'crypto', 'blockchain',
+            'altcoin', 'defi', 'nft', 'token', 'coin', 'mining', 'wallet', 'exchange',
+            'trading', 'hodl', 'market cap', 'volume', 'price', 'bullish', 'bearish',
+            'satoshi', 'wei', 'gas', 'fees', 'staking', 'yield', 'liquidity', 'dapp',
+            'smart contract', 'consensus', 'proof of work', 'proof of stake', 'fork',
+            'halving', 'airdrop', 'ico', 'ido', 'dao', 'web3', 'metaverse',
+            'cardano', 'ada', 'solana', 'sol', 'polkadot', 'dot', 'chainlink', 'link',
+            'polygon', 'matic', 'avalanche', 'avax', 'dogecoin', 'doge', 'shiba',
+            'usdt', 'usdc', 'busd', 'stable', 'tether', 'binance', 'coinbase',
+            'bull market', 'bear market', 'moon', 'lambo', 'diamond hands', 'paper hands'
+        ]
+    
+    def is_crypto_related(self, text):
+        """Check if the text is cryptocurrency related"""
+        text_lower = text.lower()
+        return any(keyword in text_lower for keyword in self.crypto_keywords)
     
     def get_crypto_price(self, coin_id):
         """Get current price and basic info for a cryptocurrency"""
@@ -39,23 +63,6 @@ class CryptoChatbot:
                 return response.json()
             return None
         except Exception as e:
-            st.error(f"Error fetching price data: {e}")
-            return None
-    
-    def get_crypto_history(self, coin_id, days=7):
-        """Get historical price data"""
-        try:
-            url = f"{COINGECKO_BASE_URL}/coins/{coin_id}/market_chart"
-            params = {
-                'vs_currency': 'usd',
-                'days': days
-            }
-            response = requests.get(url, params=params)
-            if response.status_code == 200:
-                return response.json()
-            return None
-        except Exception as e:
-            st.error(f"Error fetching historical data: {e}")
             return None
     
     def get_trending_coins(self):
@@ -67,7 +74,6 @@ class CryptoChatbot:
                 return response.json()
             return None
         except Exception as e:
-            st.error(f"Error fetching trending data: {e}")
             return None
     
     def get_market_overview(self):
@@ -86,38 +92,85 @@ class CryptoChatbot:
                 return response.json()
             return None
         except Exception as e:
-            st.error(f"Error fetching market data: {e}")
             return None
+    
+    def get_current_market_data(self):
+        """Get current market data to provide context to AI"""
+        market_data = self.get_market_overview()
+        trending_data = self.get_trending_coins()
+        
+        context = "Current Crypto Market Data:\n"
+        
+        if market_data:
+            context += "Top 5 Cryptocurrencies by Market Cap:\n"
+            for i, coin in enumerate(market_data[:5], 1):
+                price = coin['current_price']
+                change = coin['price_change_percentage_24h']
+                context += f"{i}. {coin['name']} ({coin['symbol'].upper()}): ${price:,.2f} ({change:+.2f}%)\n"
+        
+        if trending_data and 'coins' in trending_data:
+            context += "\nTrending Coins:\n"
+            for i, coin in enumerate(trending_data['coins'][:3], 1):
+                context += f"{i}. {coin['item']['name']} ({coin['item']['symbol']})\n"
+        
+        return context
+    
+    def ask_ai(self, user_question):
+        """Ask Gemini AI about cryptocurrency topics only"""
+        
+        # First check if the question is crypto-related
+        if not self.is_crypto_related(user_question):
+            return "🚫 I'm sorry, but I can only answer questions related to cryptocurrency, blockchain, and digital assets. Please ask me something about crypto!"
+        
+        try:
+            # Get current market data for context
+            market_context = self.get_current_market_data()
+            
+            # Create prompt for Gemini
+            prompt = f"""You are a cryptocurrency expert assistant. You ONLY answer questions related to cryptocurrency, blockchain, digital assets, DeFi, NFTs, and related topics.
+
+STRICT RULES:
+1. ONLY respond to cryptocurrency-related questions
+2. If asked about non-crypto topics, politely decline and redirect to crypto topics
+3. Provide accurate, helpful information about cryptocurrencies
+4. Use current market data when relevant
+5. Be conversational but informative
+6. Use emojis occasionally to make responses engaging
+7. Keep responses concise but informative (under 300 words)
+
+Current Market Context:
+{market_context}
+
+User Question: {user_question}
+
+Please provide a helpful response about this cryptocurrency topic:"""
+
+            response = self.model.generate_content(prompt)
+            
+            return response.text
+            
+        except Exception as e:
+            return f"Sorry, I encountered an error while processing your question: {str(e)}"
     
     def process_query(self, user_input):
         """Process user query and return appropriate response"""
-        user_input = user_input.lower()
+        user_input_lower = user_input.lower()
         
-        # Price queries
-        if "price" in user_input:
+        # Check for specific data requests first
+        if "price" in user_input_lower and any(coin.replace('-', '').replace('2', '') in user_input_lower.replace(' ', '') for coin in self.supported_coins):
             for coin in self.supported_coins:
-                if coin.replace('-', '').replace('2', '') in user_input.replace(' ', ''):
+                if coin.replace('-', '').replace('2', '') in user_input_lower.replace(' ', ''):
                     return self.handle_price_query(coin)
-            return "I can get prices for Bitcoin, Ethereum, BNB, Cardano, Solana, Polkadot, Dogecoin, Avalanche, Chainlink, and Polygon. Which one would you like?"
         
-        # Chart queries
-        elif "chart" in user_input or "graph" in user_input:
-            for coin in self.supported_coins:
-                if coin.replace('-', '').replace('2', '') in user_input.replace(' ', ''):
-                    return self.handle_chart_query(coin)
-            return "Which cryptocurrency would you like to see a chart for?"
-        
-        # Trending queries
-        elif "trending" in user_input or "popular" in user_input:
+        elif "trending" in user_input_lower or "popular" in user_input_lower:
             return self.handle_trending_query()
         
-        # Market overview
-        elif "market" in user_input or "overview" in user_input or "top" in user_input:
+        elif "market" in user_input_lower and ("overview" in user_input_lower or "top" in user_input_lower):
             return self.handle_market_query()
         
-        # General help
+        # For all other questions, use AI
         else:
-            return self.get_help_response()
+            return self.ask_ai(user_input)
     
     def handle_price_query(self, coin_id):
         """Handle price-related queries"""
@@ -133,48 +186,18 @@ class CryptoChatbot:
             change_color = "green" if change_24h > 0 else "red"
             
             response = f"""
-            **{coin_id.replace('-', ' ').title()} Price Information** ₿
-            
-            💰 **Current Price:** ${price:,.2f}
-            {change_emoji} **24h Change:** <span style='color:{change_color}'>{change_24h:+.2f}%</span>
-            📊 **Market Cap:** ${market_cap:,.0f}
-            💹 **24h Volume:** ${volume_24h:,.0f}
-            
-            *Data updated: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')} UTC*
+**{coin_id.replace('-', ' ').title()} Price Information** ₿
+
+💰 **Current Price:** ${price:,.2f}
+{change_emoji} **24h Change:** <span style='color:{change_color}'>{change_24h:+.2f}%</span>
+📊 **Market Cap:** ${market_cap:,.0f}
+💹 **24h Volume:** ${volume_24h:,.0f}
+
+*Data updated: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')} UTC*
             """
             return response
         else:
             return f"Sorry, I couldn't fetch the price data for {coin_id}. Please try again later."
-    
-    def handle_chart_query(self, coin_id):
-        """Handle chart-related queries"""
-        history_data = self.get_crypto_history(coin_id, days=30)
-        if history_data:
-            prices = history_data['prices']
-            df = pd.DataFrame(prices, columns=['timestamp', 'price'])
-            df['date'] = pd.to_datetime(df['timestamp'], unit='ms')
-            
-            fig = go.Figure()
-            fig.add_trace(go.Scatter(
-                x=df['date'],
-                y=df['price'],
-                mode='lines',
-                name=coin_id.replace('-', ' ').title(),
-                line=dict(color='#00D4AA', width=2)
-            ))
-            
-            fig.update_layout(
-                title=f"{coin_id.replace('-', ' ').title()} Price Chart (30 Days)",
-                xaxis_title="Date",
-                yaxis_title="Price (USD)",
-                template="plotly_dark",
-                height=400
-            )
-            
-            st.plotly_chart(fig, use_container_width=True)
-            return f"Here's the 30-day price chart for {coin_id.replace('-', ' ').title()}!"
-        else:
-            return f"Sorry, I couldn't fetch the chart data for {coin_id}."
     
     def handle_trending_query(self):
         """Handle trending coins query"""
@@ -204,101 +227,127 @@ class CryptoChatbot:
             return "**📊 Top 10 Cryptocurrencies by Market Cap:**"
         else:
             return "Sorry, I couldn't fetch market data right now."
-    
-    def get_help_response(self):
-        """Provide help information"""
-        return """
-        **🤖 Crypto Assistant Help**
-        
-        I can help you with:
-        
-        📈 **Price Queries:** Ask about prices like "What's the price of Bitcoin?" or "ETH price"
-        
-        📊 **Charts:** Request charts like "Show me Bitcoin chart" or "Ethereum graph"
-        
-        🔥 **Trending:** Ask "What's trending?" or "Show popular coins"
-        
-        💹 **Market Overview:** Ask "Market overview" or "Top cryptocurrencies"
-        
-        **Supported Cryptocurrencies:**
-        Bitcoin, Ethereum, BNB, Cardano, Solana, Polkadot, Dogecoin, Avalanche, Chainlink, Polygon
-        
-        Just type your question naturally - I'll understand! 🚀
-        """
-
-# Initialize the chatbot
-@st.cache_resource
-def load_chatbot():
-    return CryptoChatbot()
 
 def main():
     st.title("🚀 Cryptocurrency Assistant")
-    st.markdown("Your AI-powered crypto companion for real-time market data and insights!")
+    st.markdown("Your AI-powered crypto companion that ONLY talks about cryptocurrency!")
     
-    # Initialize chatbot
-    chatbot = load_chatbot()
-    
-    # Initialize chat history
-    if "messages" not in st.session_state:
-        st.session_state.messages = []
-        # Add welcome message
-        welcome_msg = chatbot.get_help_response()
-        st.session_state.messages.append({"role": "assistant", "content": welcome_msg})
-    
-    # Display chat messages
-    for message in st.session_state.messages:
-        with st.chat_message(message["role"]):
-            if message["role"] == "assistant":
-                st.markdown(message["content"], unsafe_allow_html=True)
-            else:
-                st.write(message["content"])
-    
-    # Chat input
-    if prompt := st.chat_input("Ask me about cryptocurrency prices, charts, or market trends..."):
-        # Add user message to chat history
-        st.session_state.messages.append({"role": "user", "content": prompt})
-        
-        # Display user message
-        with st.chat_message("user"):
-            st.write(prompt)
-        
-        # Generate and display assistant response
-        with st.chat_message("assistant"):
-            with st.spinner("Fetching crypto data..."):
-                response = chatbot.process_query(prompt)
-                st.markdown(response, unsafe_allow_html=True)
-                
-                # Add assistant response to chat history
-                st.session_state.messages.append({"role": "assistant", "content": response})
-    
-    # Sidebar with quick actions
+    # API Key input
     with st.sidebar:
+        st.header("🔑 API Configuration")
+        gemini_api_key = st.text_input(
+            "Enter your Gemini API Key:",
+            type="password",
+            help="Get your API key from https://makersuite.google.com/app/apikey"
+        )
+        
+        if not gemini_api_key:
+            st.warning("⚠️ Please enter your Gemini API key to use the chatbot!")
+            st.markdown("---")
+            st.markdown("**How to get a Gemini API key:**")
+            st.markdown("1. Go to https://makersuite.google.com/app/apikey")
+            st.markdown("2. Sign in with your Google account")
+            st.markdown("3. Click 'Create API Key'")
+            st.markdown("4. Copy and paste it above")
+            st.markdown("5. Gemini API is FREE to use!")
+            return
+        
+        st.success("✅ Gemini API Key configured!")
+        st.markdown("---")
+        
         st.header("Quick Actions")
         
+        # Initialize chatbot
+        if 'chatbot' not in st.session_state:
+            st.session_state.chatbot = CryptoChatbot(gemini_api_key)
+        
         if st.button("🔥 Show Trending"):
-            response = chatbot.handle_trending_query()
+            response = st.session_state.chatbot.handle_trending_query()
+            if 'messages' not in st.session_state:
+                st.session_state.messages = []
             st.session_state.messages.append({"role": "assistant", "content": response})
             st.rerun()
         
         if st.button("📊 Market Overview"):
-            response = chatbot.handle_market_query()
+            response = st.session_state.chatbot.handle_market_query()
+            if 'messages' not in st.session_state:
+                st.session_state.messages = []
             st.session_state.messages.append({"role": "assistant", "content": response})
             st.rerun()
         
         if st.button("💰 Bitcoin Price"):
-            response = chatbot.handle_price_query("bitcoin")
+            response = st.session_state.chatbot.handle_price_query("bitcoin")
+            if 'messages' not in st.session_state:
+                st.session_state.messages = []
             st.session_state.messages.append({"role": "assistant", "content": response})
             st.rerun()
         
         if st.button("🔄 Clear Chat"):
             st.session_state.messages = []
-            welcome_msg = chatbot.get_help_response()
-            st.session_state.messages.append({"role": "assistant", "content": welcome_msg})
             st.rerun()
         
         st.markdown("---")
-        st.markdown("**Data Source:** CoinGecko API")
-        st.markdown("**Update Frequency:** Real-time")
+        st.markdown("**Features:**")
+        st.markdown("• Gemini AI answers crypto questions")
+        st.markdown("• Real-time price data")
+        st.markdown("• Market trends & analysis")
+        st.markdown("• ONLY crypto topics allowed")
+        st.markdown("• FREE Gemini API usage!")
+    
+    # Initialize chatbot with API key
+    if gemini_api_key:
+        if 'chatbot' not in st.session_state:
+            st.session_state.chatbot = CryptoChatbot(gemini_api_key)
+        
+        # Initialize chat history
+        if "messages" not in st.session_state:
+            st.session_state.messages = []
+            welcome_msg = """
+🤖 **Welcome to your Crypto Assistant!** 
+
+I'm here to answer ANY cryptocurrency-related questions you have! I can help you with:
+
+💡 **General Crypto Knowledge:** Blockchain basics, how cryptocurrencies work, DeFi, NFTs
+📊 **Market Analysis:** Price predictions, market trends, trading strategies  
+🔍 **Specific Coins:** Information about Bitcoin, Ethereum, altcoins, new projects
+⚡ **Real-time Data:** Current prices, trending coins, market overview
+🎓 **Learning:** Crypto terminology, investment tips, security best practices
+
+**Try asking me:**
+- "What is Bitcoin and how does it work?"
+- "Should I invest in Ethereum right now?"
+- "What's the difference between DeFi and traditional finance?"
+- "Bitcoin price" (for real-time data)
+- "Show trending coins"
+
+❌ **Note:** I ONLY discuss cryptocurrency topics. I won't answer questions about other subjects!
+
+What would you like to know about crypto? 🚀
+            """
+            st.session_state.messages.append({"role": "assistant", "content": welcome_msg})
+        
+        # Display chat messages
+        for message in st.session_state.messages:
+            with st.chat_message(message["role"]):
+                st.markdown(message["content"], unsafe_allow_html=True)
+        
+        # Chat input
+        if prompt := st.chat_input("Ask me anything about cryptocurrency..."):
+            # Add user message to chat history
+            st.session_state.messages.append({"role": "user", "content": prompt})
+            
+            # Display user message
+            with st.chat_message("user"):
+                st.write(prompt)
+            
+            # Generate and display assistant response
+            with st.chat_message("assistant"):
+                with st.spinner("Thinking about crypto..."):
+                    response = st.session_state.chatbot.process_query(prompt)
+                    st.markdown(response, unsafe_allow_html=True)
+                    
+                    # Add assistant response to chat history
+                    st.session_state.messages.append({"role": "assistant", "content": response})
 
 if __name__ == "__main__":
     main()
