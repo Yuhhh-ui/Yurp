@@ -13,7 +13,8 @@ st.set_page_config(
     layout="wide"
 )
 
-# API Configuration
+# API Configuration - ADD YOUR GEMINI API KEY HERE
+GEMINI_API_KEY = "YOUR_GEMINI_API_KEY_HERE"  # Replace with your actual API key
 COINGECKO_BASE_URL = "https://api.coingecko.com/api/v3"
 
 class CryptoChatbot:
@@ -239,35 +240,25 @@ def main():
     st.title("🚀 Cryptocurrency Assistant")
     st.markdown("Your AI-powered crypto companion that ONLY talks about cryptocurrency!")
     
-    # API Key input
+    # Check if API key is configured
+    if GEMINI_API_KEY == "YOUR_GEMINI_API_KEY_HERE":
+        st.error("❌ **API Key Not Configured!**")
+        st.markdown("Please replace `YOUR_GEMINI_API_KEY_HERE` in the code with your actual Gemini API key.")
+        st.markdown("**How to get a Gemini API key:**")
+        st.markdown("1. Go to https://makersuite.google.com/app/apikey")
+        st.markdown("2. Sign in with your Google account")
+        st.markdown("3. Click 'Create API Key'")
+        st.markdown("4. Replace the placeholder in the code with your key")
+        return
+    
+    # Sidebar with quick actions
     with st.sidebar:
-        st.header("🔑 API Configuration")
-        gemini_api_key = st.text_input(
-            "Enter your Gemini API Key:",
-            type="password",
-            help="Get your API key from https://makersuite.google.com/app/apikey"
-        )
-        
-        if not gemini_api_key:
-            st.warning("⚠️ Please enter your Gemini API key to use the chatbot!")
-            st.markdown("---")
-            st.markdown("**How to get a Gemini API key:**")
-            st.markdown("1. Go to https://makersuite.google.com/app/apikey")
-            st.markdown("2. Sign in with your Google account")
-            st.markdown("3. Click 'Create API Key'")
-            st.markdown("4. Copy and paste it above")
-            st.markdown("5. Gemini API is FREE to use!")
-            return
-        
-        st.success("✅ Gemini API Key configured!")
-        st.markdown("---")
-        
-        st.header("Quick Actions")
+        st.header("🎛️ Quick Actions")
         
         # Initialize chatbot
         if 'chatbot' not in st.session_state:
             try:
-                st.session_state.chatbot = CryptoChatbot(gemini_api_key)
+                st.session_state.chatbot = CryptoChatbot(GEMINI_API_KEY)
                 st.success("✅ Gemini AI model loaded successfully!")
             except Exception as e:
                 st.error(f"❌ Error initializing Gemini: {str(e)}")
@@ -308,25 +299,24 @@ def main():
         st.markdown("• Real-time price data")
         st.markdown("• Market trends & analysis")
         st.markdown("• ONLY crypto topics allowed")
-        st.markdown("• FREE Gemini API usage!")
+        st.markdown("• No API key input required!")
     
-    # Initialize chatbot with API key
-    if gemini_api_key:
-        if 'chatbot' not in st.session_state:
-            try:
-                st.session_state.chatbot = CryptoChatbot(gemini_api_key)
-            except Exception as e:
-                st.error(f"❌ Error initializing Gemini: {str(e)}")
-                st.markdown("**Please check:**")
-                st.markdown("1. Your API key is correct")
-                st.markdown("2. You have internet connection")
-                st.markdown("3. Try a different API key")
-                return
-        
-        # Initialize chat history
-        if "messages" not in st.session_state:
-            st.session_state.messages = []
-            welcome_msg = """
+    # Initialize chatbot
+    if 'chatbot' not in st.session_state:
+        try:
+            st.session_state.chatbot = CryptoChatbot(GEMINI_API_KEY)
+        except Exception as e:
+            st.error(f"❌ Error initializing Gemini: {str(e)}")
+            st.markdown("**Please check:**")
+            st.markdown("1. Your API key is correct")
+            st.markdown("2. You have internet connection")
+            st.markdown("3. Try refreshing the page")
+            return
+    
+    # Initialize chat history
+    if "messages" not in st.session_state:
+        st.session_state.messages = []
+        welcome_msg = """
 🤖 **Welcome to your Crypto Assistant!** 
 
 I'm here to answer ANY cryptocurrency-related questions you have! I can help you with:
@@ -347,31 +337,31 @@ I'm here to answer ANY cryptocurrency-related questions you have! I can help you
 ❌ **Note:** I ONLY discuss cryptocurrency topics. I won't answer questions about other subjects!
 
 What would you like to know about crypto? 🚀
-            """
-            st.session_state.messages.append({"role": "assistant", "content": welcome_msg})
+        """
+        st.session_state.messages.append({"role": "assistant", "content": welcome_msg})
+    
+    # Display chat messages
+    for message in st.session_state.messages:
+        with st.chat_message(message["role"]):
+            st.markdown(message["content"], unsafe_allow_html=True)
+    
+    # Chat input
+    if prompt := st.chat_input("Ask me anything about cryptocurrency..."):
+        # Add user message to chat history
+        st.session_state.messages.append({"role": "user", "content": prompt})
         
-        # Display chat messages
-        for message in st.session_state.messages:
-            with st.chat_message(message["role"]):
-                st.markdown(message["content"], unsafe_allow_html=True)
+        # Display user message
+        with st.chat_message("user"):
+            st.write(prompt)
         
-        # Chat input
-        if prompt := st.chat_input("Ask me anything about cryptocurrency..."):
-            # Add user message to chat history
-            st.session_state.messages.append({"role": "user", "content": prompt})
-            
-            # Display user message
-            with st.chat_message("user"):
-                st.write(prompt)
-            
-            # Generate and display assistant response
-            with st.chat_message("assistant"):
-                with st.spinner("Thinking about crypto..."):
-                    response = st.session_state.chatbot.process_query(prompt)
-                    st.markdown(response, unsafe_allow_html=True)
-                    
-                    # Add assistant response to chat history
-                    st.session_state.messages.append({"role": "assistant", "content": response})
+        # Generate and display assistant response
+        with st.chat_message("assistant"):
+            with st.spinner("Thinking about crypto..."):
+                response = st.session_state.chatbot.process_query(prompt)
+                st.markdown(response, unsafe_allow_html=True)
+                
+                # Add assistant response to chat history
+                st.session_state.messages.append({"role": "assistant", "content": response})
 
 if __name__ == "__main__":
     main()
