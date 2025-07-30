@@ -445,7 +445,6 @@ def main():
         bottom: 0;
         width: 2px;
         background: linear-gradient(180deg, #00ff88, transparent);
-        animation: dataPulse 2s infinite;
     }
     
     /* AI Message Styling - Holographic Panel */
@@ -473,7 +472,6 @@ def main():
         bottom: -2px;
         background: linear-gradient(45deg, #00d4ff, #ff0080, #00ff88, #00d4ff);
         background-size: 300% 300%;
-        animation: borderGlow 3s ease infinite;
         border-radius: 15px;
         z-index: -1;
         opacity: 0.5;
@@ -494,7 +492,7 @@ def main():
         letter-spacing: 1px;
     }
     
-    /* Data stream effect for AI messages */
+    /* Data stream effect for AI messages - conditional animation */
     .ai-message .data-stream {
         position: absolute;
         right: 10px;
@@ -503,7 +501,6 @@ def main():
         height: 8px;
         background: #00ff88;
         border-radius: 50%;
-        animation: dataPulse 1.5s infinite;
         box-shadow: 0 0 10px #00ff88;
     }
     
@@ -516,7 +513,6 @@ def main():
         height: 6px;
         background: #00d4ff;
         border-radius: 50%;
-        animation: dataPulse 1.5s infinite 0.3s;
         box-shadow: 0 0 8px #00d4ff;
     }
     
@@ -529,8 +525,32 @@ def main():
         height: 4px;
         background: #ff0080;
         border-radius: 50%;
-        animation: dataPulse 1.5s infinite 0.6s;
         box-shadow: 0 0 6px #ff0080;
+    }
+    
+    /* Animated versions - only when toggle is on */
+    .animations-on .ai-message .data-stream {
+        animation: dataPulse 1.5s infinite;
+    }
+    
+    .animations-on .ai-message .data-stream::before {
+        animation: dataPulse 1.5s infinite 0.3s;
+    }
+    
+    .animations-on .ai-message .data-stream::after {
+        animation: dataPulse 1.5s infinite 0.6s;
+    }
+    
+    .animations-on .user-message::after {
+        animation: dataPulse 2s infinite;
+    }
+    
+    .animations-on .user-message .terminal-cursor {
+        animation: cursorBlink 1s infinite;
+    }
+    
+    .animations-on .ai-message::before {
+        animation: borderGlow 3s ease infinite;
     }
     
     /* Animations */
@@ -551,7 +571,6 @@ def main():
         height: 1.2em;
         background: #00ff88;
         margin-left: 2px;
-        animation: cursorBlink 1s infinite;
     }
     
     @keyframes cursorBlink {
@@ -583,16 +602,24 @@ def main():
     </style>
     """, unsafe_allow_html=True)
     
-    # Custom header with crypto styling
-    st.markdown("""
-    <div class="main-header">
-        🚀 CRYPTOMIND AI 🤖
-    </div>
-    <div class="sub-header">
-        ⚡ Your Crypto Buddy That Actually Gets It ⚡<br>
-        <span style="color: #00ff88;">🔮 Smart AI • Live Prices • Easy Explanations 🔮</span>
-    </div>
-    """, unsafe_allow_html=True)
+    # Custom header with crypto styling and toggle
+    col1, col2, col3 = st.columns([1, 2, 1])
+    
+    with col1:
+        # Animation toggle in top corner
+        animation_enabled = st.toggle("🌟 Effects", value=True, help="Toggle blinking animations")
+        st.session_state.animation_enabled = animation_enabled
+    
+    with col2:
+        st.markdown("""
+        <div class="main-header">
+            🚀 CRYPTOMIND AI 🤖
+        </div>
+        <div class="sub-header">
+            ⚡ Your Crypto Buddy That Actually Gets It ⚡<br>
+            <span style="color: #00ff88;">🔮 Smart AI • Live Prices • Easy Explanations 🔮</span>
+        </div>
+        """, unsafe_allow_html=True)
     
     # Check if API key is configured
     if GEMINI_API_KEY == "YOUR_GEMINI_API_KEY_HERE":
@@ -716,57 +743,18 @@ def main():
             """, unsafe_allow_html=True)
             return
     
-    # Initialize chat history with enhanced welcome message
+    # Initialize chat history without the welcome message
     if "messages" not in st.session_state:
         st.session_state.messages = []
-        welcome_msg = """
-<div class="welcome-container">
-
-# 🤖 **HEY! CRYPTOMIND AI HERE** 🤖
-
-### ⚡ **READY TO TALK CRYPTO!** ⚡
-
----
-
-## 🚀 **WHAT'S UP?** 🚀
-
-I'm your crypto buddy who actually makes sense of all this Bitcoin and blockchain stuff! 
-
-### 💎 **HERE'S WHAT I'M GOOD AT:**
-- **🧠 Making Crypto Simple** → No confusing jargon, just straight talk about Bitcoin, Ethereum, NFTs, and more
-- **📊 Live Market Updates** → Current prices, trending coins, what's hot right now  
-- **🔍 Coin Research** → Want to know about a specific crypto? I got you covered
-- **⚡ Quick Data** → Just ask for prices or trending coins and I'll hook you up
-- **🎓 Learning Made Easy** → Trading basics, how to stay safe, investment tips that actually make sense
-
-### 🎯 **TRY ASKING ME STUFF LIKE:**
-```
-"What's Bitcoin and why should I care?"
-"Is it a good time to buy Ethereum?"
-"Explain NFTs like I'm not a tech genius"
-"Bitcoin price" → Get the current price instantly
-"What's trending?" → See what coins are hot
-```
-
-### 🛡️ **HEADS UP**
-I only talk crypto stuff - that's my thing! Ask me about anything else and I'll redirect you back to the good stuff 😄
-
----
-
-## 🔮 **SO... WHAT DO YOU WANT TO KNOW ABOUT CRYPTO?** 🔮
-
-*I'm here to help you understand this wild world of digital money! 🚀*
-
-</div>
-        """
-        st.session_state.messages.append({"role": "assistant", "content": welcome_msg})
     
-    # Display chat messages with custom styling
+    # Display chat messages with custom styling and conditional animations
+    animation_class = "animations-on" if st.session_state.get('animation_enabled', True) else ""
+    
     for message in st.session_state.messages:
         if message["role"] == "user":
             # Custom user message with terminal styling
             st.markdown(f"""
-            <div class="user-message">
+            <div class="user-message {animation_class}">
                 <strong style="color: #00ff88; font-family: 'Orbitron', monospace;">USER_INPUT:</strong> {message["content"]}
                 <div class="terminal-cursor"></div>
             </div>
@@ -774,7 +762,7 @@ I only talk crypto stuff - that's my thing! Ask me about anything else and I'll 
         else:
             # Custom AI message with holographic styling
             st.markdown(f"""
-            <div class="ai-message">
+            <div class="ai-message {animation_class}">
                 <div class="data-stream"></div>
                 {message["content"]}
             </div>
