@@ -625,20 +625,9 @@ def main():
     <script>
     function updateAnimationState() {{
         const isAnimationEnabled = {str(st.session_state.get('animation_enabled', True)).lower()};
-        const elementsToAnimate = [
-            document.querySelector('.ai-message::before'),
-            document.querySelector('.ai-message .data-stream'),
-            document.querySelector('.ai-message .data-stream::before'),
-            document.querySelector('.ai-message .data-stream::after'),
-            document.querySelector('.user-message::after'),
-            document.querySelector('.user-message .terminal-cursor')
-        ];
-
-        // For pseudo-elements, we need to apply styles to their parent and handle it there,
-        // or apply the animation-play-state directly if possible.
-        // For simplicity, let's adjust the CSS directly for existing animations.
-
-        const styleSheet = document.styleSheets[0]; // Get the first stylesheet
+        
+        // Get the first stylesheet
+        const styleSheet = document.styleSheets[0]; 
 
         function findRuleAndSetPlayState(selector, playState) {{
             for (const rule of styleSheet.cssRules) {{
@@ -668,9 +657,9 @@ def main():
     // Run on initial load
     updateAnimationState();
 
-    // Re-run if Streamlit re-renders parts of the page (e.g. from chat input)
-    const observer = new MutationObserver(updateAnimationState);
-    observer.observe(document.body, { childList: true, subtree: true });
+    // Create the observer AFTER updateAnimationState is defined
+    const observer = new MutationObserver(updateAnimationState); 
+    observer.observe(document.body, {{ childList: true, subtree: true }});
 
     </script>
     """
