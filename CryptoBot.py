@@ -213,18 +213,16 @@ Give a helpful, friendly and professional response:"""
             change_text = "going up" if change_24h > 0 else "going down"
             change_color = "green" if change_24h > 0 else "red"
             
-            response = f"""
-**{coin_id.replace('-', ' ').title()} Right Now** 💰
+            response = f"""**{coin_id.replace('-', ' ').title()} Right Now** 💰
 
 💵 **Price:** ${price:,.2f}
-{change_emoji} **24h:** <span style='color:{change_color}'>{change_24h:+.2f}%</span> ({change_text})
+{change_emoji} **24h:** {change_24h:+.2f}% ({change_text})
 📊 **Market Size:** ${market_cap:,.0f}
 💹 **Daily Trading:** ${volume_24h:,.0f}
 
 *Updated: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')} UTC*
 
-Remember: Crypto prices change super fast! ⚡
-            """
+Remember: Crypto prices change super fast! ⚡"""
             return response
         else:
             return f"Hmm, couldn't grab the price for {coin_id} right now 🤔 Maybe try again in a bit?"
@@ -694,8 +692,11 @@ def show_homepage():
     col1, col2, col3 = st.columns([1, 2, 1])
     
     with col2:
-        # Custom styled button that works with Streamlit
-        if st.button("🚀 START A CHAT 🚀", key="start_chat", help="Begin your crypto journey!", use_container_width=True):
+        # Fixed button implementation
+        start_chat_button = st.button("🚀 START A CHAT 🚀", key="start_chat_btn", help="Begin your crypto journey!", use_container_width=True)
+        
+        # Handle button click using session state
+        if start_chat_button:
             st.session_state.show_homepage = False
             st.session_state.start_chat = True
             st.rerun()
@@ -1055,7 +1056,8 @@ def show_chat():
     """, unsafe_allow_html=True)
     
     # Back to homepage button
-    if st.button("🏠 ← BACK TO HOME", key="back_home"):
+    back_home_button = st.button("🏠 ← BACK TO HOME", key="back_home_btn")
+    if back_home_button:
         st.session_state.show_homepage = True
         st.session_state.start_chat = False
         st.session_state.messages = []  # Clear chat history
@@ -1130,14 +1132,16 @@ def show_chat():
         col1, col2 = st.columns(2)
         
         with col1:
-            if st.button("🔥 TRENDING"):
+            trending_btn = st.button("🔥 TRENDING", key="trending_btn")
+            if trending_btn:
                 response = st.session_state.chatbot.handle_trending_query()
                 if 'messages' not in st.session_state:
                     st.session_state.messages = []
                 st.session_state.messages.append({"role": "assistant", "content": response})
                 st.rerun()
             
-            if st.button("💰 BTC PRICE"):
+            btc_price_btn = st.button("💰 BTC PRICE", key="btc_price_btn")
+            if btc_price_btn:
                 response = st.session_state.chatbot.handle_price_query("bitcoin")
                 if 'messages' not in st.session_state:
                     st.session_state.messages = []
@@ -1145,14 +1149,16 @@ def show_chat():
                 st.rerun()
         
         with col2:
-            if st.button("📊 TOP COINS"):
+            top_coins_btn = st.button("📊 TOP COINS", key="top_coins_btn")
+            if top_coins_btn:
                 response = st.session_state.chatbot.handle_market_query()
                 if 'messages' not in st.session_state:
                     st.session_state.messages = []
                 st.session_state.messages.append({"role": "assistant", "content": response})
                 st.rerun()
             
-            if st.button("🔄 CLEAR CHAT"):
+            clear_chat_btn = st.button("🔄 CLEAR CHAT", key="clear_chat_btn")
+            if clear_chat_btn:
                 st.session_state.messages = []
                 st.rerun()
         
@@ -1221,7 +1227,8 @@ def show_chat():
             """, unsafe_allow_html=True)
     
     # Chat input with enhanced styling
-    if prompt := st.chat_input("🤑Ask me anything about crypto..."):
+    prompt = st.chat_input("🤑Ask me anything about crypto...")
+    if prompt:
         # Add user message to chat history
         st.session_state.messages.append({"role": "user", "content": prompt})
         
