@@ -394,70 +394,94 @@ def show_homepage():
             box-shadow: 0 8px 25px rgba(255, 255, 255, 0.2);
         }
         
-        /* 3D Floating Elements */
+        /* 3D Floating Crypto Elements */
         .floating-element {
             position: absolute;
-            opacity: 0.8;
+            opacity: 0.9;
             animation: float3d 8s ease-in-out infinite;
-            filter: blur(0.5px);
+            font-size: 3rem;
+            user-select: none;
+            pointer-events: none;
         }
         
-        .crystal-1 {
+        /* Bitcoin Coin */
+        .crypto-bitcoin {
             top: 15%;
             left: 10%;
-            width: 120px;
-            height: 120px;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            transform: rotate(45deg);
-            border-radius: 20px;
+            color: #f7931a;
+            text-shadow: 0 0 20px rgba(247, 147, 26, 0.6);
             animation-delay: 0s;
-            box-shadow: 0 20px 40px rgba(102, 126, 234, 0.3);
+            filter: drop-shadow(0 10px 20px rgba(247, 147, 26, 0.3));
         }
         
-        .crystal-2 {
+        /* Ethereum */
+        .crypto-ethereum {
             top: 25%;
             right: 15%;
-            width: 80px;
-            height: 80px;
-            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
-            border-radius: 50%;
+            color: #627eea;
+            text-shadow: 0 0 20px rgba(98, 126, 234, 0.6);
             animation-delay: 2s;
-            box-shadow: 0 15px 30px rgba(240, 147, 251, 0.3);
+            filter: drop-shadow(0 8px 16px rgba(98, 126, 234, 0.3));
         }
         
-        .crystal-3 {
+        /* Circuit/Tech Element */
+        .crypto-circuit {
             bottom: 30%;
             left: 20%;
-            width: 100px;
-            height: 100px;
-            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
-            transform: rotate(30deg);
-            border-radius: 15px;
+            color: #00ff88;
+            text-shadow: 0 0 20px rgba(0, 255, 136, 0.6);
             animation-delay: 4s;
-            box-shadow: 0 18px 35px rgba(79, 172, 254, 0.3);
+            filter: drop-shadow(0 12px 24px rgba(0, 255, 136, 0.3));
         }
         
-        .crystal-4 {
+        /* Dollar/Money */
+        .crypto-money {
             bottom: 20%;
             right: 10%;
-            width: 60px;
-            height: 60px;
-            background: linear-gradient(135deg, #fa709a 0%, #fee140 100%);
-            border-radius: 50%;
+            color: #50c878;
+            text-shadow: 0 0 20px rgba(80, 200, 120, 0.6);
             animation-delay: 6s;
-            box-shadow: 0 12px 25px rgba(250, 112, 154, 0.3);
+            filter: drop-shadow(0 6px 12px rgba(80, 200, 120, 0.3));
         }
         
-        .crystal-5 {
+        /* Rocket/Growth */
+        .crypto-rocket {
             top: 60%;
             right: 25%;
-            width: 90px;
-            height: 90px;
-            background: linear-gradient(135deg, #a8edea 0%, #fed6e3 100%);
-            transform: rotate(60deg);
-            border-radius: 20px;
+            color: #ff6b6b;
+            text-shadow: 0 0 20px rgba(255, 107, 107, 0.6);
             animation-delay: 1s;
-            box-shadow: 0 16px 32px rgba(168, 237, 234, 0.3);
+            filter: drop-shadow(0 8px 16px rgba(255, 107, 107, 0.3));
+        }
+        
+        /* Shield/Security */
+        .crypto-shield {
+            top: 45%;
+            left: 8%;
+            color: #4ecdc4;
+            text-shadow: 0 0 20px rgba(78, 205, 196, 0.6);
+            animation-delay: 3s;
+            filter: drop-shadow(0 10px 20px rgba(78, 205, 196, 0.3));
+        }
+        
+        /* Chart/Analytics */
+        .crypto-chart {
+            top: 70%;
+            left: 15%;
+            color: #ffd93d;
+            text-shadow: 0 0 20px rgba(255, 217, 61, 0.6);
+            animation-delay: 5s;
+            filter: drop-shadow(0 7px 14px rgba(255, 217, 61, 0.3));
+        }
+        
+        /* Diamond/Value */
+        .crypto-diamond {
+            bottom: 40%;
+            right: 20%;
+            color: #b19cd9;
+            text-shadow: 0 0 20px rgba(177, 156, 217, 0.6);
+            animation-delay: 7s;
+            filter: drop-shadow(0 9px 18px rgba(177, 156, 217, 0.3));
         }
         
         @keyframes float3d {
@@ -465,11 +489,28 @@ def show_homepage():
                 transform: translateY(0px) rotate(0deg) scale(1);
             }
             33% { 
-                transform: translateY(-20px) rotate(5deg) scale(1.05);
+                transform: translateY(-25px) rotate(10deg) scale(1.1);
             }
             66% { 
-                transform: translateY(10px) rotate(-3deg) scale(0.95);
+                transform: translateY(15px) rotate(-5deg) scale(0.9);
             }
+        }
+        
+        /* Special pulse animation for crypto elements */
+        @keyframes cryptoPulse {
+            0%, 100% { 
+                opacity: 0.9;
+                transform: scale(1);
+            }
+            50% { 
+                opacity: 1;
+                transform: scale(1.05);
+            }
+        }
+        
+        /* Apply pulse to certain elements */
+        .crypto-bitcoin, .crypto-ethereum {
+            animation: float3d 8s ease-in-out infinite, cryptoPulse 3s ease-in-out infinite;
         }
         
         /* Hero Section */
@@ -565,9 +606,9 @@ def show_homepage():
                 font-size: 0.8rem;
             }
             
-            .crystal-1, .crystal-2, .crystal-3, .crystal-4, .crystal-5 {
-                width: 60px !important;
-                height: 60px !important;
+            .crypto-bitcoin, .crypto-ethereum, .crypto-circuit, .crypto-money, 
+            .crypto-rocket, .crypto-shield, .crypto-chart, .crypto-diamond {
+                font-size: 2rem !important;
             }
             
             .hero-container {
@@ -618,13 +659,16 @@ def show_homepage():
     </div>
     """, unsafe_allow_html=True)
     
-    # Floating 3D Elements
+    # Floating 3D Crypto Elements
     st.markdown("""
-    <div class="floating-element crystal-1"></div>
-    <div class="floating-element crystal-2"></div>
-    <div class="floating-element crystal-3"></div>
-    <div class="floating-element crystal-4"></div>
-    <div class="floating-element crystal-5"></div>
+    <div class="floating-element crypto-bitcoin">₿</div>
+    <div class="floating-element crypto-ethereum">⟠</div>
+    <div class="floating-element crypto-circuit">⚡</div>
+    <div class="floating-element crypto-money">💰</div>
+    <div class="floating-element crypto-rocket">🚀</div>
+    <div class="floating-element crypto-shield">🛡️</div>
+    <div class="floating-element crypto-chart">📈</div>
+    <div class="floating-element crypto-diamond">💎</div>
     """, unsafe_allow_html=True)
     
     # Hero Section
