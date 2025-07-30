@@ -15,7 +15,7 @@ st.set_page_config(
 )
 
 # API Configuration - ADD YOUR GEMINI API KEY HERE
-GEMINI_API_KEY = "AIzaSyB8gVz_X5Uo36pBWaLKZqYjSGD0WMy5pO8"
+GEMINI_API_KEY = "AIzaSyDI-goqVqX2FpAhcK-WPS72UZ4ok2OhSFE"
 COINGECKO_BASE_URL = "https://api.coingecko.com/api/v3"
 
 class CryptoChatbot:
