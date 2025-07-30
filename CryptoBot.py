@@ -358,40 +358,136 @@ def show_homepage():
             font-family: 'Inter', sans-serif;
             font-weight: 500;
             font-size: 0.9rem;
-            transition: color 0.3s ease;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            padding: 0.5rem 1rem;
+            border-radius: 8px;
         }
         
         .nav-link:hover {
             color: white;
+            background: rgba(255, 255, 255, 0.1);
+            transform: translateY(-1px);
         }
         
         .nav-rating {
             display: flex;
             gap: 2px;
+            padding: 0.5rem;
         }
         
         .star {
             color: #ffd700;
-            font-size: 0.8rem;
-        }
-        
-        .signup-btn {
-            background: white;
-            color: #1a1a2e;
-            padding: 0.6rem 1.5rem;
-            border-radius: 25px;
-            text-decoration: none;
-            font-family: 'Inter', sans-serif;
-            font-weight: 600;
             font-size: 0.9rem;
-            transition: all 0.3s ease;
-            border: none;
-            cursor: pointer;
+            text-shadow: 0 0 5px rgba(255, 215, 0, 0.5);
         }
         
-        .signup-btn:hover {
-            transform: translateY(-1px);
-            box-shadow: 0 8px 25px rgba(255, 255, 255, 0.2);
+        /* About Modal */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            backdrop-filter: blur(10px);
+            z-index: 2000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            animation: fadeIn 0.3s ease;
+        }
+        
+        .modal-content {
+            background: linear-gradient(135deg, rgba(26, 26, 46, 0.95), rgba(22, 33, 62, 0.95));
+            border: 2px solid rgba(102, 126, 234, 0.3);
+            border-radius: 20px;
+            padding: 2.5rem;
+            max-width: 600px;
+            width: 90%;
+            max-height: 80vh;
+            overflow-y: auto;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+            position: relative;
+            backdrop-filter: blur(20px);
+        }
+        
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+        }
+        
+        .modal-title {
+            font-family: 'Inter', sans-serif;
+            font-weight: 700;
+            font-size: 1.5rem;
+            color: white;
+            margin: 0;
+        }
+        
+        .close-btn {
+            background: none;
+            border: none;
+            color: rgba(255, 255, 255, 0.7);
+            font-size: 1.5rem;
+            cursor: pointer;
+            padding: 0.5rem;
+            border-radius: 50%;
+            transition: all 0.3s ease;
+        }
+        
+        .close-btn:hover {
+            color: white;
+            background: rgba(255, 255, 255, 0.1);
+            transform: rotate(90deg);
+        }
+        
+        .modal-body {
+            color: rgba(255, 255, 255, 0.9);
+            font-family: 'Inter', sans-serif;
+            line-height: 1.6;
+        }
+        
+        .modal-body h3 {
+            color: #667eea;
+            margin: 1.5rem 0 1rem 0;
+            font-weight: 600;
+        }
+        
+        .modal-body p {
+            margin-bottom: 1rem;
+        }
+        
+        .feature-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1rem;
+            margin: 1.5rem 0;
+        }
+        
+        .feature-card {
+            background: rgba(102, 126, 234, 0.1);
+            border: 1px solid rgba(102, 126, 234, 0.3);
+            border-radius: 10px;
+            padding: 1rem;
+            transition: transform 0.3s ease;
+        }
+        
+        .feature-card:hover {
+            transform: translateY(-2px);
+            background: rgba(102, 126, 234, 0.15);
+        }
+        
+        .feature-icon {
+            font-size: 1.5rem;
+            margin-bottom: 0.5rem;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: scale(0.9); }
+            to { opacity: 1; transform: scale(1); }
         }
         
         /* 3D Floating Crypto Elements */
@@ -635,7 +731,7 @@ def show_homepage():
     </style>
     """, unsafe_allow_html=True)
     
-    # Navigation Bar
+    # Navigation Bar with About Modal
     st.markdown("""
     <div class="nav-container">
         <div class="nav-content">
@@ -644,7 +740,6 @@ def show_homepage():
                 <div class="logo-text">CRYPTO KNIGHT</div>
             </div>
             <div class="nav-links">
-                <a href="#" class="nav-link">LOG IN</a>
                 <div class="nav-rating">
                     <span class="star">★</span>
                     <span class="star">★</span>
@@ -652,11 +747,87 @@ def show_homepage():
                     <span class="star">★</span>
                     <span class="star">★</span>
                 </div>
-                <a href="#" class="nav-link">ABOUT</a>
-                <button class="signup-btn">Sign up →</button>
+                <span class="nav-link" onclick="showAboutModal()">ABOUT</span>
             </div>
         </div>
     </div>
+    
+    <!-- About Modal -->
+    <div id="aboutModal" class="modal-overlay" style="display: none;">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 class="modal-title">🛡️ About Crypto Knight</h2>
+                <button class="close-btn" onclick="hideAboutModal()">×</button>
+            </div>
+            <div class="modal-body">
+                <p><strong>Welcome to the future of crypto education!</strong></p>
+                
+                <h3>🎯 Our Purpose</h3>
+                <p>Crypto Knight is your personal AI-powered crypto companion, designed to make cryptocurrency accessible, understandable, and exciting for everyone. We bridge the gap between complex crypto concepts and everyday understanding.</p>
+                
+                <h3>🤖 How It Works</h3>
+                <p>Our advanced AI chatbot combines real-time market data with intelligent conversation to provide you with:</p>
+                
+                <div class="feature-grid">
+                    <div class="feature-card">
+                        <div class="feature-icon">💬</div>
+                        <strong>Smart Conversations</strong><br>
+                        Ask anything about crypto in plain English and get clear, friendly explanations
+                    </div>
+                    <div class="feature-card">
+                        <div class="feature-icon">📊</div>
+                        <strong>Live Market Data</strong><br>
+                        Real-time prices, trending coins, and market insights powered by CoinGecko API
+                    </div>
+                    <div class="feature-card">
+                        <div class="feature-icon">🎓</div>
+                        <strong>Educational Focus</strong><br>
+                        Learn about blockchain, DeFi, NFTs, and more with beginner-friendly explanations
+                    </div>
+                    <div class="feature-card">
+                        <div class="feature-icon">🔒</div>
+                        <strong>Safe & Focused</strong><br>
+                        Crypto-only conversations with honest risk assessments and responsible advice
+                    </div>
+                </div>
+                
+                <h3>💡 What Makes Us Different</h3>
+                <p>• <strong>Teen-Friendly:</strong> We speak your language, no confusing jargon<br>
+                • <strong>Real-Time Data:</strong> Always current with live market information<br>
+                • <strong>Caribbean Focus:</strong> Localized insights for our regional users<br>
+                • <strong>Honest & Transparent:</strong> We always mention risks and promote responsible investing</p>
+                
+                <h3>🚀 Get Started</h3>
+                <p>Ready to explore the crypto universe? Click "Start a chat" and ask me anything - from basic questions like "What is Bitcoin?" to complex topics like DeFi protocols. I'm here to guide you on your crypto journey!</p>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        function showAboutModal() {
+            document.getElementById('aboutModal').style.display = 'flex';
+            document.body.style.overflow = 'hidden';
+        }
+        
+        function hideAboutModal() {
+            document.getElementById('aboutModal').style.display = 'none';
+            document.body.style.overflow = 'auto';
+        }
+        
+        // Close modal when clicking outside
+        document.getElementById('aboutModal').addEventListener('click', function(e) {
+            if (e.target === this) {
+                hideAboutModal();
+            }
+        });
+        
+        // Close modal with Escape key
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') {
+                hideAboutModal();
+            }
+        });
+    </script>
     """, unsafe_allow_html=True)
     
     # Floating 3D Crypto Elements
