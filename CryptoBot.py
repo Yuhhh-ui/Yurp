@@ -8,7 +8,7 @@ import re
 
 # Page configuration
 st.set_page_config(
-    page_title="CryptoMind AI",
+    page_title="Kryptonic AI",
     page_icon="🚀",
     layout="wide",
     initial_sidebar_state="expanded"
@@ -136,7 +136,7 @@ class CryptoChatbot:
             market_context = self.get_current_market_data()
             
             # Create prompt for Gemini
-            prompt = f"""You are a cool, teen-friendly cryptocurrency assistant. You're talking to young people (ages 15-30) who want to learn about crypto.
+            prompt = f"""You are a professional, teen-friendly cryptocurrency assistant. You're talking to young people (ages 17-30) who want to learn about crypto. Keep the statistics local like for the Caribbean
 
 PERSONALITY:
 - Be friendly, enthusiastic, and relatable
@@ -149,11 +149,12 @@ PERSONALITY:
 RULES:
 1. ONLY answer crypto-related questions
 2. If it's not about crypto, redirect nicely to crypto topics
-3. Explain things simply but accurately
+3. Explain things simply but accurately and professionally 
 4. Use current market data when it helps
-5. Keep responses under 250 words
+5. Keep responses under 100 words
 6. Be encouraging but realistic about crypto investing
 7. Always mention that crypto is risky
+8. Answer in point form where neccessary.
 
 TONE EXAMPLES:
 - Instead of "utilize" say "use"
@@ -164,16 +165,16 @@ TONE EXAMPLES:
 Current Market Context:
 {market_context}
 
-User Question: {user_question}
+Your Question: {user_question}
 
-Give a helpful, friendly response:"""
+Give a helpful, friendly and professional response:"""
 
             response = self.model.generate_content(prompt)
             
             return response.text
             
         except Exception as e:
-            return f"Oops! Something went wrong on my end 😅 Try asking again in a sec: {str(e)}"
+            return f"Oops! Something went wrong on my end 😅 Try asking again in a second: {str(e)}"
     
     def process_query(self, user_input):
         """Process user query and return appropriate response"""
@@ -538,9 +539,6 @@ def main():
         animation-play-state: running;
     }
     
-    /* Dynamic animation styles controlled by JavaScript */
-    /* Removed the .animate-pulse class from CSS as it's not needed directly for toggle */
-    
     /* Animations */
     @keyframes borderGlow {
         0%, 100% { background-position: 0% 50%; }
@@ -600,7 +598,7 @@ def main():
     with col2:
         st.markdown("""
         <div class="main-header">
-            🚀 CRYPTOMIND AI 🤖
+            🚀 Kryptonic AI 🤖
         </div>
         <div class="sub-header">
             ⚡ Your Crypto Buddy That Actually Gets It ⚡<br>
@@ -757,12 +755,12 @@ def main():
             """, unsafe_allow_html=True)
     
     # Chat input with enhanced styling
-    if prompt := st.chat_input("🔮 Ask me anything about crypto..."):
+    if prompt := st.chat_input("🤑Ask me anything about crypto..."):
         # Add user message to chat history
         st.session_state.messages.append({"role": "user", "content": prompt})
         
         # Generate and display assistant response
-        with st.spinner("🧠 Thinking about your crypto question..."):
+        with st.spinner("🧠 Thinking about your question..."):
             response = st.session_state.chatbot.process_query(prompt)
             
             # Add assistant response to chat history
