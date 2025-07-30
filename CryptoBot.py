@@ -103,7 +103,7 @@ class CryptoChatbot:
         except Exception as e:
             return None
     
-    def get_current_market_data(self):
+    def get_current_market_data(self, num_top_coins=5, num_trending_coins=3):
         """Get current market data to provide context to AI"""
         market_data = self.get_market_overview()
         trending_data = self.get_trending_coins()
@@ -111,15 +111,15 @@ class CryptoChatbot:
         context = "Current Crypto Market Data:\n"
         
         if market_data:
-            context += "Top 5 Cryptocurrencies by Market Cap:\n"
-            for i, coin in enumerate(market_data[:5], 1):
+            context += f"Top {num_top_coins} Cryptocurrencies by Market Cap:\n"
+            for i, coin in enumerate(market_data[:num_top_coins], 1):
                 price = coin['current_price']
                 change = coin['price_change_percentage_24h']
                 context += f"{i}. {coin['name']} ({coin['symbol'].upper()}): ${price:,.2f} ({change:+.2f}%)\n"
         
         if trending_data and 'coins' in trending_data:
-            context += "\nTrending Coins:\n"
-            for i, coin in enumerate(trending_data['coins'][:3], 1):
+            context += f"\nTrending Coins (Top {num_trending_coins}):\n"
+            for i, coin in enumerate(trending_data['coins'][:num_trending_coins], 1):
                 context += f"{i}. {coin['item']['name']} ({coin['item']['symbol']})\n"
         
         return context
@@ -445,8 +445,8 @@ def main():
         bottom: 0;
         width: 2px;
         background: linear-gradient(180deg, #00ff88, transparent);
-        /* Initially paused */
-        animation-play-state: paused; 
+        /* Animations always running */
+        animation-play-state: running; 
     }
     
     /* AI Message Styling - Holographic Panel */
@@ -477,8 +477,8 @@ def main():
         border-radius: 15px;
         z-index: -1;
         opacity: 0.5;
-        /* Initially paused */
-        animation-play-state: paused;
+        /* Animations always running */
+        animation-play-state: running;
     }
     
     .ai-message::after {
@@ -506,8 +506,8 @@ def main():
         background: #00ff88;
         border-radius: 50%;
         box-shadow: 0 0 10px #00ff88;
-        /* Initially paused */
-        animation-play-state: paused;
+        /* Animations always running */
+        animation-play-state: running;
     }
     
     .ai-message .data-stream::before {
@@ -520,8 +520,8 @@ def main():
         background: #00d4ff;
         border-radius: 50%;
         box-shadow: 0 0 8px #00d4ff;
-        /* Initially paused */
-        animation-play-state: paused;
+        /* Animations always running */
+        animation-play-state: running;
     }
     
     .ai-message .data-stream::after {
@@ -534,8 +534,8 @@ def main():
         background: #ff0080;
         border-radius: 50%;
         box-shadow: 0 0 6px #ff0080;
-        /* Initially paused */
-        animation-play-state: paused;
+        /* Animations always running */
+        animation-play-state: running;
     }
     
     /* Dynamic animation styles controlled by JavaScript */
@@ -559,8 +559,8 @@ def main():
         height: 1.2em;
         background: #00ff88;
         margin-left: 2px;
-        /* Initially paused */
-        animation-play-state: paused;
+        /* Animations always running */
+        animation-play-state: running;
     }
     
     @keyframes cursorBlink {
@@ -592,21 +592,10 @@ def main():
     </style>
     """, unsafe_allow_html=True)
     
-    # Custom header with crypto styling and toggle
+    # Custom header with crypto styling (toggle removed)
     col1, col2, col3 = st.columns([1, 2, 1])
     
-    with col1:
-        # Initialize animation state
-        if 'animation_enabled' not in st.session_state:
-            st.session_state.animation_enabled = True
-            
-        # Animation toggle
-        animation_enabled = st.toggle("🌟 Effects", value=st.session_state.animation_enabled, key="animation_toggle") # Added a key for stability
-        
-        # Update state and apply CSS class to body
-        if st.session_state.animation_enabled != animation_enabled:
-            st.session_state.animation_enabled = animation_enabled
-            # No need to rerun here, the JavaScript will handle the state
+    # Removed the st.toggle code from here
             
     with col2:
         st.markdown("""
@@ -620,51 +609,8 @@ def main():
         """, unsafe_allow_html=True)
     
     # --- JAVASCRIPT TO CONTROL ANIMATION PLAY STATE ---
-    # This script will run on every render and set the animation-play-state based on the toggle.
-    js_code = f"""
-    <script>
-    function updateAnimationState() {{
-        const isAnimationEnabled = {str(st.session_state.get('animation_enabled', True)).lower()};
-        
-        // Get the first stylesheet
-        const styleSheet = document.styleSheets[0]; 
-
-        function findRuleAndSetPlayState(selector, playState) {{
-            for (const rule of styleSheet.cssRules) {{
-                if (rule.selectorText && rule.selectorText.includes(selector)) {{
-                    rule.style.animationPlayState = playState;
-                }}
-            }}
-        }}
-
-        const playState = isAnimationEnabled ? 'running' : 'paused';
-
-        findRuleAndSetPlayState('.ai-message::before', playState);
-        findRuleAndSetPlayState('.ai-message .data-stream', playState);
-        findRuleAndSetPlayState('.ai-message .data-stream::before', playState);
-        findRuleAndSetPlayState('.ai-message .data-stream::after', playState);
-        findRuleAndSetPlayState('.user-message::after', playState);
-        findRuleAndSetPlayState('.user-message .terminal-cursor', playState);
-        
-        // Handle glow-text separately as it's a direct element
-        const glowTexts = document.querySelectorAll('.glow-text');
-        glowTexts.forEach(el => {{
-            el.style.animationPlayState = playState;
-        }});
-
-    }}
-
-    // Run on initial load
-    updateAnimationState();
-
-    // Create the observer AFTER updateAnimationState is defined
-    const observer = new MutationObserver(updateAnimationState); 
-    observer.observe(document.body, {{ childList: true, subtree: true }});
-
-    </script>
-    """
-    st.markdown(js_code, unsafe_allow_html=True)
-
+    # Removed all JavaScript related to animation control via toggle
+    
     # Check if API key is configured
     if GEMINI_API_KEY == "YOUR_GEMINI_API_KEY_HERE":
         st.markdown("""
