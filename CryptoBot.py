@@ -259,7 +259,449 @@ Remember: Crypto prices change super fast! ⚡
         else:
             return "Oops! Can't load the market data right now 📊 Give it another shot!"
 
-def main():
+def show_homepage():
+    """Display the stunning homepage"""
+    st.markdown("""
+    <style>
+        /* Import cyber fonts */
+        @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Rajdhani:wght@300;400;600;700&display=swap');
+        
+        /* Hide Streamlit default elements for homepage */
+        .main > div {
+            padding-top: 0rem;
+            padding-bottom: 0rem;
+        }
+        
+        /* Homepage Styles */
+        .homepage-container {
+            position: relative;
+            min-height: 100vh;
+            background: linear-gradient(135deg, 
+                #0a0a0a 0%, 
+                #1a1a2e 25%, 
+                #16213e 50%, 
+                #0f0f23 75%, 
+                #000000 100%);
+            color: #ffffff;
+            font-family: 'Rajdhani', sans-serif;
+            overflow: hidden;
+            margin: -1rem -1rem 0 -1rem;
+            padding: 0;
+        }
+        
+        /* Navigation */
+        .homepage-navbar {
+            position: fixed;
+            top: 0;
+            width: 100%;
+            padding: 1rem 2rem;
+            background: rgba(10, 10, 10, 0.9);
+            backdrop-filter: blur(20px);
+            border-bottom: 1px solid rgba(0, 255, 136, 0.2);
+            z-index: 1000;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .homepage-logo {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            font-family: 'Orbitron', monospace;
+            font-weight: 700;
+            font-size: 1.2rem;
+            color: #00ff88;
+            text-shadow: 0 0 10px rgba(0, 255, 136, 0.5);
+        }
+        
+        .homepage-logo-icon {
+            width: 40px;
+            height: 40px;
+            background: linear-gradient(45deg, #00ff88, #00d4ff);
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.2rem;
+            box-shadow: 0 0 20px rgba(0, 255, 136, 0.3);
+        }
+        
+        .homepage-nav-links {
+            display: flex;
+            gap: 2rem;
+            align-items: center;
+        }
+        
+        .homepage-nav-link {
+            color: #888;
+            text-decoration: none;
+            font-family: 'Rajdhani', sans-serif;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            cursor: default;
+        }
+        
+        .homepage-nav-link:hover {
+            color: #00ff88;
+            text-shadow: 0 0 10px rgba(0, 255, 136, 0.5);
+        }
+        
+        .homepage-signup-btn {
+            background: linear-gradient(45deg, #00ff88, #00d4ff);
+            color: #000;
+            padding: 0.7rem 1.5rem;
+            border: none;
+            border-radius: 25px;
+            font-family: 'Rajdhani', sans-serif;
+            font-weight: 600;
+            text-decoration: none;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(0, 255, 136, 0.3);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            cursor: pointer;
+        }
+        
+        .homepage-signup-btn:hover {
+            background: linear-gradient(45deg, #ff0080, #00ff88);
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(255, 0, 128, 0.4);
+        }
+        
+        /* Main Container */
+        .homepage-main {
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            padding: 2rem;
+            margin-top: 80px;
+        }
+        
+        /* Hero Section */
+        .homepage-hero {
+            text-align: center;
+            max-width: 800px;
+            z-index: 10;
+            position: relative;
+        }
+        
+        .homepage-hero-title {
+            font-family: 'Orbitron', monospace;
+            font-weight: 900;
+            font-size: clamp(2.5rem, 8vw, 4.5rem);
+            line-height: 1.2;
+            margin-bottom: 2rem;
+            background: linear-gradient(90deg, #ffffff, #00ff88, #00d4ff, #ffffff);
+            background-size: 300% 300%;
+            animation: gradientShift 4s ease infinite;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            text-shadow: 0 0 30px rgba(0, 255, 136, 0.5);
+        }
+        
+        .homepage-hero-subtitle {
+            font-size: clamp(1rem, 3vw, 1.3rem);
+            color: #888;
+            margin-bottom: 1rem;
+            font-weight: 400;
+            line-height: 1.6;
+        }
+        
+        .homepage-hero-description {
+            font-size: clamp(1.1rem, 3vw, 1.4rem);
+            color: #00ff88;
+            margin-bottom: 3rem;
+            font-weight: 600;
+            text-shadow: 0 0 10px rgba(0, 255, 136, 0.3);
+        }
+        
+        /* Floating 3D Elements */
+        .homepage-floating-element {
+            position: absolute;
+            pointer-events: none;
+        }
+        
+        .homepage-crystal-1 {
+            top: 15%;
+            left: 15%;
+            width: 80px;
+            height: 80px;
+            background: linear-gradient(45deg, #00d4ff, #0080ff);
+            clip-path: polygon(50% 0%, 0% 100%, 100% 100%);
+            animation: float1 6s ease-in-out infinite;
+            box-shadow: 0 0 30px rgba(0, 212, 255, 0.6);
+        }
+        
+        .homepage-crystal-2 {
+            top: 20%;
+            right: 10%;
+            width: 60px;
+            height: 60px;
+            background: linear-gradient(45deg, #ff0080, #ff4080);
+            clip-path: polygon(50% 0%, 100% 50%, 50% 100%, 0% 50%);
+            animation: float2 8s ease-in-out infinite;
+            box-shadow: 0 0 25px rgba(255, 0, 128, 0.6);
+        }
+        
+        .homepage-crystal-3 {
+            bottom: 25%;
+            left: 10%;
+            width: 70px;
+            height: 70px;
+            background: linear-gradient(45deg, #00ff88, #80ff88);
+            clip-path: polygon(25% 0%, 75% 0%, 100% 50%, 75% 100%, 25% 100%, 0% 50%);
+            animation: float3 7s ease-in-out infinite;
+            box-shadow: 0 0 28px rgba(0, 255, 136, 0.6);
+        }
+        
+        .homepage-crystal-4 {
+            bottom: 15%;
+            right: 20%;
+            width: 50px;
+            height: 50px;
+            background: linear-gradient(45deg, #8000ff, #c080ff);
+            border-radius: 50%;
+            animation: float4 5s ease-in-out infinite;
+            box-shadow: 0 0 20px rgba(128, 0, 255, 0.6);
+        }
+        
+        .homepage-orb-1 {
+            top: 30%;
+            left: 5%;
+            width: 40px;
+            height: 40px;
+            background: radial-gradient(circle, #00ff88, transparent);
+            border-radius: 50%;
+            animation: pulse1 3s ease-in-out infinite;
+            opacity: 0.7;
+        }
+        
+        .homepage-orb-2 {
+            top: 60%;
+            right: 15%;
+            width: 35px;
+            height: 35px;
+            background: radial-gradient(circle, #00d4ff, transparent);
+            border-radius: 50%;
+            animation: pulse2 4s ease-in-out infinite;
+            opacity: 0.6;
+        }
+        
+        .homepage-ring-1 {
+            top: 40%;
+            right: 5%;
+            width: 100px;
+            height: 100px;
+            border: 3px solid rgba(0, 255, 136, 0.3);
+            border-radius: 50%;
+            animation: rotate1 10s linear infinite;
+        }
+        
+        .homepage-ring-2 {
+            bottom: 30%;
+            left: 20%;
+            width: 80px;
+            height: 80px;
+            border: 2px solid rgba(0, 212, 255, 0.4);
+            border-radius: 50%;
+            animation: rotate2 8s linear infinite reverse;
+        }
+        
+        /* Particle Background */
+        .homepage-particles {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 1;
+        }
+        
+        .homepage-particle {
+            position: absolute;
+            width: 2px;
+            height: 2px;
+            background: #00ff88;
+            border-radius: 50%;
+            animation: twinkle 3s ease-in-out infinite;
+        }
+        
+        .homepage-particle:nth-child(2n) { background: #00d4ff; animation-delay: 1s; }
+        .homepage-particle:nth-child(3n) { background: #ff0080; animation-delay: 2s; }
+        
+        /* Animations */
+        @keyframes gradientShift {
+            0%, 100% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+        }
+        
+        @keyframes float1 {
+            0%, 100% { transform: translateY(0px) rotate(0deg); }
+            33% { transform: translateY(-20px) rotate(120deg); }
+            66% { transform: translateY(10px) rotate(240deg); }
+        }
+        
+        @keyframes float2 {
+            0%, 100% { transform: translateY(0px) rotate(0deg); }
+            50% { transform: translateY(-30px) rotate(180deg); }
+        }
+        
+        @keyframes float3 {
+            0%, 100% { transform: translateY(0px) rotate(0deg); }
+            25% { transform: translateY(-15px) rotate(90deg); }
+            75% { transform: translateY(15px) rotate(270deg); }
+        }
+        
+        @keyframes float4 {
+            0%, 100% { transform: translateY(0px) scale(1); }
+            50% { transform: translateY(-25px) scale(1.1); }
+        }
+        
+        @keyframes pulse1 {
+            0%, 100% { transform: scale(1); opacity: 0.7; }
+            50% { transform: scale(1.5); opacity: 0.3; }
+        }
+        
+        @keyframes pulse2 {
+            0%, 100% { transform: scale(1); opacity: 0.6; }
+            50% { transform: scale(1.3); opacity: 0.2; }
+        }
+        
+        @keyframes rotate1 {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+        
+        @keyframes rotate2 {
+            from { transform: rotate(360deg); }
+            to { transform: rotate(0deg); }
+        }
+        
+        @keyframes twinkle {
+            0%, 100% { opacity: 0; transform: scale(0); }
+            50% { opacity: 1; transform: scale(1); }
+        }
+        
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            .homepage-navbar {
+                padding: 1rem;
+            }
+            
+            .homepage-nav-links {
+                gap: 1rem;
+            }
+            
+            .homepage-nav-link {
+                font-size: 0.9rem;
+            }
+            
+            .homepage-signup-btn {
+                padding: 0.5rem 1rem;
+                font-size: 0.9rem;
+            }
+            
+            .homepage-main {
+                padding: 1rem;
+                margin-top: 60px;
+            }
+            
+            .homepage-hero-description {
+                margin-bottom: 2rem;
+            }
+            
+            .homepage-crystal-1, .homepage-crystal-2, .homepage-crystal-3, .homepage-crystal-4 {
+                transform: scale(0.7);
+            }
+            
+            .homepage-ring-1, .homepage-ring-2 {
+                transform: scale(0.6);
+            }
+        }
+        
+        @media (max-width: 480px) {
+            .homepage-nav-links .homepage-nav-link:not(:last-child) {
+                display: none;
+            }
+        }
+    </style>
+    
+    <div class="homepage-container">
+        <!-- Particle Background -->
+        <div class="homepage-particles">
+            <div class="homepage-particle" style="top: 10%; left: 20%; animation-delay: 0s;"></div>
+            <div class="homepage-particle" style="top: 30%; left: 80%; animation-delay: 1s;"></div>
+            <div class="homepage-particle" style="top: 60%; left: 10%; animation-delay: 2s;"></div>
+            <div class="homepage-particle" style="top: 80%; left: 70%; animation-delay: 0.5s;"></div>
+            <div class="homepage-particle" style="top: 20%; left: 50%; animation-delay: 1.5s;"></div>
+            <div class="homepage-particle" style="top: 70%; left: 30%; animation-delay: 2.5s;"></div>
+            <div class="homepage-particle" style="top: 40%; left: 90%; animation-delay: 0.8s;"></div>
+            <div class="homepage-particle" style="top: 90%; left: 20%; animation-delay: 1.8s;"></div>
+        </div>
+
+        <!-- Navigation -->
+        <nav class="homepage-navbar">
+            <div class="homepage-logo">
+                <div class="homepage-logo-icon">🛡️</div>
+                <span>KRYPTONIC AI</span>
+            </div>
+            <div class="homepage-nav-links">
+                <span class="homepage-nav-link">LOG IN</span>
+                <span class="homepage-nav-link">★★★★★</span>
+                <span class="homepage-nav-link">ABOUT</span>
+                <span class="homepage-signup-btn">Sign up →</span>
+            </div>
+        </nav>
+
+        <!-- Main Container -->
+        <div class="homepage-main">
+            <!-- Floating 3D Elements -->
+            <div class="homepage-floating-element homepage-crystal-1"></div>
+            <div class="homepage-floating-element homepage-crystal-2"></div>
+            <div class="homepage-floating-element homepage-crystal-3"></div>
+            <div class="homepage-floating-element homepage-crystal-4"></div>
+            <div class="homepage-floating-element homepage-orb-1"></div>
+            <div class="homepage-floating-element homepage-orb-2"></div>
+            <div class="homepage-floating-element homepage-ring-1"></div>
+            <div class="homepage-floating-element homepage-ring-2"></div>
+
+            <!-- Hero Section -->
+            <div class="homepage-hero">
+                <h1 class="homepage-hero-title">
+                    Welcome to Kryptonic AI,<br>
+                    Your crypto guide, where<br>
+                    futures collide
+                </h1>
+                <p class="homepage-hero-subtitle">
+                    ⚡ Your Crypto Buddy That Actually Gets It ⚡
+                </p>
+                <p class="homepage-hero-description">
+                    🔮 Smart AI • Live Prices • Easy Explanations 🔮
+                </p>
+            </div>
+        </div>
+    </div>
+    """, unsafe_allow_html=True)
+    
+    # Create columns for the start chat button
+    col1, col2, col3 = st.columns([1, 2, 1])
+    
+    with col2:
+        # Custom styled button that works with Streamlit
+        if st.button("🚀 START A CHAT 🚀", key="start_chat", help="Begin your crypto journey!", use_container_width=True):
+            st.session_state.show_homepage = False
+            st.session_state.start_chat = True
+            st.rerun()
+
+def show_chat():
+    """Display the chat interface"""
     # Load the crypto theme CSS
     st.markdown("""
     <style>
@@ -449,7 +891,6 @@ def main():
         bottom: 0;
         width: 2px;
         background: linear-gradient(180deg, #00ff88, transparent);
-        /* Animations always running */
         animation-play-state: running; 
     }
     
@@ -481,7 +922,6 @@ def main():
         border-radius: 15px;
         z-index: -1;
         opacity: 0.5;
-        /* Animations always running */
         animation-play-state: running;
     }
     
@@ -500,7 +940,7 @@ def main():
         letter-spacing: 1px;
     }
     
-    /* Data stream effect for AI messages - conditional animation */
+    /* Data stream effect for AI messages */
     .ai-message .data-stream {
         position: absolute;
         right: 10px;
@@ -510,7 +950,6 @@ def main():
         background: #00ff88;
         border-radius: 50%;
         box-shadow: 0 0 10px #00ff88;
-        /* Animations always running */
         animation-play-state: running;
     }
     
@@ -524,7 +963,6 @@ def main():
         background: #00d4ff;
         border-radius: 50%;
         box-shadow: 0 0 8px #00d4ff;
-        /* Animations always running */
         animation-play-state: running;
     }
     
@@ -538,7 +976,6 @@ def main():
         background: #ff0080;
         border-radius: 50%;
         box-shadow: 0 0 6px #ff0080;
-        /* Animations always running */
         animation-play-state: running;
     }
     
@@ -560,7 +997,6 @@ def main():
         height: 1.2em;
         background: #00ff88;
         margin-left: 2px;
-        /* Animations always running */
         animation-play-state: running;
     }
     
@@ -590,13 +1026,43 @@ def main():
         transition: all 0.3s ease;
     }
     
+    /* Back to homepage button */
+    .back-to-home {
+        position: fixed;
+        top: 1rem;
+        left: 1rem;
+        z-index: 1000;
+        background: linear-gradient(45deg, #ff0080, #00ff88);
+        color: #000;
+        border: none;
+        border-radius: 25px;
+        padding: 0.5rem 1rem;
+        font-family: 'Rajdhani', sans-serif;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        cursor: pointer;
+        box-shadow: 0 4px 15px rgba(255, 0, 128, 0.3);
+        transition: all 0.3s ease;
+    }
+    
+    .back-to-home:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 20px rgba(255, 0, 128, 0.5);
+    }
+    
     </style>
     """, unsafe_allow_html=True)
     
-    # Custom header with crypto styling (toggle removed)
-    col1, col2, col3 = st.columns([1, 2, 1])
+    # Back to homepage button
+    if st.button("🏠 ← BACK TO HOME", key="back_home"):
+        st.session_state.show_homepage = True
+        st.session_state.start_chat = False
+        st.session_state.messages = []  # Clear chat history
+        st.rerun()
     
-    # Removed the st.toggle code from here
+    # Custom header with crypto styling
+    col1, col2, col3 = st.columns([1, 2, 1])
             
     with col2:
         st.markdown("""
@@ -608,9 +1074,6 @@ def main():
             <span style="color: #00ff88;">🔮 Smart AI • Live Prices • Easy Explanations 🔮</span>
         </div>
         """, unsafe_allow_html=True)
-    
-    # --- JAVASCRIPT TO CONTROL ANIMATION PLAY STATE ---
-    # Removed all JavaScript related to animation control via toggle
     
     # Check if API key is configured
     if GEMINI_API_KEY == "YOUR_GEMINI_API_KEY_HERE":
@@ -771,6 +1234,19 @@ def main():
         
         # Rerun to show new messages with custom styling
         st.rerun()
+
+def main():
+    # Initialize session state
+    if 'show_homepage' not in st.session_state:
+        st.session_state.show_homepage = True
+    if 'start_chat' not in st.session_state:
+        st.session_state.start_chat = False
+    
+    # Show homepage or chat based on state
+    if st.session_state.show_homepage:
+        show_homepage()
+    else:
+        show_chat()
 
 if __name__ == "__main__":
     main()
