@@ -607,7 +607,9 @@ def main():
     
     with col1:
         # Animation toggle in top corner
-        animation_enabled = st.toggle("🌟 Effects", value=True, help="Toggle blinking animations")
+        if 'animation_enabled' not in st.session_state:
+            st.session_state.animation_enabled = True
+        animation_enabled = st.toggle("🌟 Effects", value=st.session_state.animation_enabled, help="Toggle blinking animations")
         st.session_state.animation_enabled = animation_enabled
     
     with col2:
@@ -620,6 +622,9 @@ def main():
             <span style="color: #00ff88;">🔮 Smart AI • Live Prices • Easy Explanations 🔮</span>
         </div>
         """, unsafe_allow_html=True)
+    
+    with col3:
+        st.write("")  # Empty column for spacing
     
     # Check if API key is configured
     if GEMINI_API_KEY == "YOUR_GEMINI_API_KEY_HERE":
@@ -750,11 +755,15 @@ def main():
     # Display chat messages with custom styling and conditional animations
     animation_class = "animations-on" if st.session_state.get('animation_enabled', True) else ""
     
+    # Add CSS class to body based on toggle state
+    if st.session_state.get('animation_enabled', True):
+        st.markdown('<div class="animations-on">', unsafe_allow_html=True)
+    
     for message in st.session_state.messages:
         if message["role"] == "user":
             # Custom user message with terminal styling
             st.markdown(f"""
-            <div class="user-message {animation_class}">
+            <div class="user-message">
                 <strong style="color: #00ff88; font-family: 'Orbitron', monospace;">USER_INPUT:</strong> {message["content"]}
                 <div class="terminal-cursor"></div>
             </div>
@@ -762,11 +771,15 @@ def main():
         else:
             # Custom AI message with holographic styling
             st.markdown(f"""
-            <div class="ai-message {animation_class}">
+            <div class="ai-message">
                 <div class="data-stream"></div>
                 {message["content"]}
             </div>
             """, unsafe_allow_html=True)
+    
+    # Close the animation wrapper div
+    if st.session_state.get('animation_enabled', True):
+        st.markdown('</div>', unsafe_allow_html=True)
     
     # Chat input with enhanced styling
     if prompt := st.chat_input("🔮 Ask me anything about crypto..."):
