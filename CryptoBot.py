@@ -528,28 +528,53 @@ def main():
         box-shadow: 0 0 6px #ff0080;
     }
     
-    /* Animated versions - only when toggle is on */
-    .animations-on .ai-message .data-stream {
+    /* Dynamic animation styles controlled by JavaScript */
+    .animate-pulse .ai-message .data-stream {
         animation: dataPulse 1.5s infinite;
     }
     
-    .animations-on .ai-message .data-stream::before {
+    .animate-pulse .ai-message .data-stream::before {
         animation: dataPulse 1.5s infinite 0.3s;
     }
     
-    .animations-on .ai-message .data-stream::after {
+    .animate-pulse .ai-message .data-stream::after {
         animation: dataPulse 1.5s infinite 0.6s;
     }
     
-    .animations-on .user-message::after {
+    .animate-pulse .user-message::after {
         animation: dataPulse 2s infinite;
     }
     
-    .animations-on .user-message .terminal-cursor {
+    .animate-pulse .user-message .terminal-cursor {
         animation: cursorBlink 1s infinite;
     }
     
-    .animations-on .ai-message::before {
+    .animate-pulse .ai-message::before {
+        animation: borderGlow 3s ease infinite;
+    }
+    
+    /* Add the animations to body when enabled */
+    body.animations-enabled .ai-message .data-stream {
+        animation: dataPulse 1.5s infinite;
+    }
+    
+    body.animations-enabled .ai-message .data-stream::before {
+        animation: dataPulse 1.5s infinite 0.3s;
+    }
+    
+    body.animations-enabled .ai-message .data-stream::after {
+        animation: dataPulse 1.5s infinite 0.6s;
+    }
+    
+    body.animations-enabled .user-message::after {
+        animation: dataPulse 2s infinite;
+    }
+    
+    body.animations-enabled .user-message .terminal-cursor {
+        animation: cursorBlink 1s infinite;
+    }
+    
+    body.animations-enabled .ai-message::before {
         animation: borderGlow 3s ease infinite;
     }
     
@@ -606,11 +631,17 @@ def main():
     col1, col2, col3 = st.columns([1, 2, 1])
     
     with col1:
-        # Animation toggle in top corner
+        # Initialize animation state
         if 'animation_enabled' not in st.session_state:
             st.session_state.animation_enabled = True
-        animation_enabled = st.toggle("🌟 Effects", value=st.session_state.animation_enabled, help="Toggle blinking animations")
-        st.session_state.animation_enabled = animation_enabled
+            
+        # Animation toggle
+        animation_enabled = st.toggle("🌟 Effects", value=st.session_state.animation_enabled)
+        
+        # Update state and apply CSS class to body
+        if st.session_state.animation_enabled != animation_enabled:
+            st.session_state.animation_enabled = animation_enabled
+            st.rerun()
     
     with col2:
         st.markdown("""
@@ -623,8 +654,19 @@ def main():
         </div>
         """, unsafe_allow_html=True)
     
-    with col3:
-        st.write("")  # Empty column for spacing
+    # Apply animation class to entire page
+    if st.session_state.get('animation_enabled', True):
+        st.markdown("""
+        <script>
+        document.body.classList.add('animations-enabled');
+        </script>
+        """, unsafe_allow_html=True)
+    else:
+        st.markdown("""
+        <script>
+        document.body.classList.remove('animations-enabled');
+        </script>
+        """, unsafe_allow_html=True)
     
     # Check if API key is configured
     if GEMINI_API_KEY == "YOUR_GEMINI_API_KEY_HERE":
@@ -752,13 +794,7 @@ def main():
     if "messages" not in st.session_state:
         st.session_state.messages = []
     
-    # Display chat messages with custom styling and conditional animations
-    animation_class = "animations-on" if st.session_state.get('animation_enabled', True) else ""
-    
-    # Add CSS class to body based on toggle state
-    if st.session_state.get('animation_enabled', True):
-        st.markdown('<div class="animations-on">', unsafe_allow_html=True)
-    
+    # Display chat messages with custom styling
     for message in st.session_state.messages:
         if message["role"] == "user":
             # Custom user message with terminal styling
@@ -776,10 +812,6 @@ def main():
                 {message["content"]}
             </div>
             """, unsafe_allow_html=True)
-    
-    # Close the animation wrapper div
-    if st.session_state.get('animation_enabled', True):
-        st.markdown('</div>', unsafe_allow_html=True)
     
     # Chat input with enhanced styling
     if prompt := st.chat_input("🔮 Ask me anything about crypto..."):
