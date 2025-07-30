@@ -155,6 +155,7 @@ RULES:
 6. Be encouraging but realistic about crypto investing
 7. Always mention that crypto is risky
 8. Answer in point form where neccessary.
+9. **IMPORTANT: DO NOT include any HTML tags or markdown that creates HTML elements in your response, such as `<div>`, `<span>`, etc.**
 
 TONE EXAMPLES:
 - Instead of "utilize" say "use"
@@ -171,7 +172,9 @@ Give a helpful, friendly and professional response:"""
 
             response = self.model.generate_content(prompt)
             
-            return response.text
+            # Strip any remaining HTML tags from the response before returning
+            clean_response = re.sub(r'<.*?>', '', response.text)
+            return clean_response
             
         except Exception as e:
             return f"Oops! Something went wrong on my end 😅 Try asking again in a second: {str(e)}"
@@ -483,7 +486,7 @@ def main():
     }
     
     .ai-message::after {
-        content: "◇ CRYPTOMIND AI";
+        content: "◇ KRYPTONIC AI";
         position: absolute;
         top: -8px;
         left: 20px;
