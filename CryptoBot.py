@@ -258,163 +258,395 @@ Remember: Crypto prices change super fast! ⚡"""
             return "Oops! Can't load the market data right now 📊 Give it another shot!"
 
 def show_homepage():
-    """Display the stunning homepage"""
+    """Display the stunning homepage inspired by the reference design"""
     
-    # Apply basic background styling
+    # Enhanced CSS with 3D elements and animations
     st.markdown("""
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Rajdhani:wght@300;400;600;700&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
         
         .stApp {
-            background: linear-gradient(135deg, #0a0a0a 0%, #1a1a2e 25%, #16213e 50%, #0f0f23 75%, #000000 100%);
-            color: white;
+            background: radial-gradient(ellipse at center, #1a1a2e 0%, #16213e 35%, #0f0f23 100%);
+            min-height: 100vh;
+            overflow-x: hidden;
+            position: relative;
         }
         
-        .homepage-hero {
-            text-align: center;
-            padding: 3rem 2rem;
-            font-family: 'Orbitron', monospace;
-        }
-        
-        .hero-title {
-            font-size: 4rem;
-            font-weight: 900;
-            background: linear-gradient(90deg, #ffffff, #00ff88, #00d4ff, #ffffff);
-            background-size: 300% 300%;
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
-            margin-bottom: 1rem;
-            animation: gradientShift 4s ease infinite;
-        }
-        
-        .hero-subtitle {
-            font-size: 1.2rem;
-            color: #888;
-            margin-bottom: 1rem;
-            font-family: 'Rajdhani', sans-serif;
-        }
-        
-        .hero-description {
-            font-size: 1.4rem;
-            color: #00ff88;
-            margin-bottom: 2rem;
-            font-weight: 600;
-            text-shadow: 0 0 10px rgba(0, 255, 136, 0.3);
-        }
-        
-        .floating-icons {
-            position: absolute;
-            font-size: 2rem;
-            opacity: 0.7;
-            animation: float 6s ease-in-out infinite;
+        /* Animated background gradient */
+        .stApp::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: 
+                radial-gradient(circle at 20% 50%, rgba(120, 119, 198, 0.3) 0%, transparent 50%),
+                radial-gradient(circle at 80% 20%, rgba(255, 119, 198, 0.3) 0%, transparent 50%),
+                radial-gradient(circle at 40% 80%, rgba(120, 219, 255, 0.3) 0%, transparent 50%);
+            animation: gradientShift 10s ease infinite;
+            z-index: -1;
         }
         
         @keyframes gradientShift {
-            0%, 100% { background-position: 0% 50%; }
-            50% { background-position: 100% 50%; }
+            0%, 100% { opacity: 0.4; }
+            50% { opacity: 0.6; }
         }
         
-        @keyframes float {
-            0%, 100% { transform: translateY(0px); }
-            50% { transform: translateY(-20px); }
-        }
-        
-        .stButton > button {
-            background: linear-gradient(45deg, #00ff88, #00d4ff);
-            color: #000;
-            border: none;
-            border-radius: 25px;
-            font-family: 'Rajdhani', sans-serif;
-            font-weight: 700;
-            font-size: 1.2rem;
+        /* Navigation Bar */
+        .nav-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 1000;
             padding: 1rem 2rem;
+            background: rgba(26, 26, 46, 0.8);
+            backdrop-filter: blur(20px);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        .nav-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        
+        .logo-section {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+        
+        .logo-icon {
+            width: 40px;
+            height: 40px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.2rem;
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+        }
+        
+        .logo-text {
+            font-family: 'Inter', sans-serif;
+            font-weight: 700;
+            font-size: 1.1rem;
+            color: white;
+            letter-spacing: -0.5px;
+        }
+        
+        .nav-links {
+            display: flex;
+            gap: 2rem;
+            align-items: center;
+        }
+        
+        .nav-link {
+            color: rgba(255, 255, 255, 0.7);
+            text-decoration: none;
+            font-family: 'Inter', sans-serif;
+            font-weight: 500;
+            font-size: 0.9rem;
+            transition: color 0.3s ease;
+        }
+        
+        .nav-link:hover {
+            color: white;
+        }
+        
+        .nav-rating {
+            display: flex;
+            gap: 2px;
+        }
+        
+        .star {
+            color: #ffd700;
+            font-size: 0.8rem;
+        }
+        
+        .signup-btn {
+            background: white;
+            color: #1a1a2e;
+            padding: 0.6rem 1.5rem;
+            border-radius: 25px;
+            text-decoration: none;
+            font-family: 'Inter', sans-serif;
+            font-weight: 600;
+            font-size: 0.9rem;
             transition: all 0.3s ease;
-            box-shadow: 0 6px 20px rgba(0, 255, 136, 0.4);
-            text-transform: uppercase;
-            letter-spacing: 2px;
+            border: none;
+            cursor: pointer;
         }
         
-        .stButton > button:hover {
-            background: linear-gradient(45deg, #ff0080, #00ff88);
-            transform: translateY(-3px);
-            box-shadow: 0 8px 25px rgba(255, 0, 128, 0.5);
+        .signup-btn:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 8px 25px rgba(255, 255, 255, 0.2);
         }
         
-        @media (max-width: 768px) {
-            .hero-title {
-                font-size: 2.5rem;
+        /* 3D Floating Elements */
+        .floating-element {
+            position: absolute;
+            opacity: 0.8;
+            animation: float3d 8s ease-in-out infinite;
+            filter: blur(0.5px);
+        }
+        
+        .crystal-1 {
+            top: 15%;
+            left: 10%;
+            width: 120px;
+            height: 120px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            transform: rotate(45deg);
+            border-radius: 20px;
+            animation-delay: 0s;
+            box-shadow: 0 20px 40px rgba(102, 126, 234, 0.3);
+        }
+        
+        .crystal-2 {
+            top: 25%;
+            right: 15%;
+            width: 80px;
+            height: 80px;
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            border-radius: 50%;
+            animation-delay: 2s;
+            box-shadow: 0 15px 30px rgba(240, 147, 251, 0.3);
+        }
+        
+        .crystal-3 {
+            bottom: 30%;
+            left: 20%;
+            width: 100px;
+            height: 100px;
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+            transform: rotate(30deg);
+            border-radius: 15px;
+            animation-delay: 4s;
+            box-shadow: 0 18px 35px rgba(79, 172, 254, 0.3);
+        }
+        
+        .crystal-4 {
+            bottom: 20%;
+            right: 10%;
+            width: 60px;
+            height: 60px;
+            background: linear-gradient(135deg, #fa709a 0%, #fee140 100%);
+            border-radius: 50%;
+            animation-delay: 6s;
+            box-shadow: 0 12px 25px rgba(250, 112, 154, 0.3);
+        }
+        
+        .crystal-5 {
+            top: 60%;
+            right: 25%;
+            width: 90px;
+            height: 90px;
+            background: linear-gradient(135deg, #a8edea 0%, #fed6e3 100%);
+            transform: rotate(60deg);
+            border-radius: 20px;
+            animation-delay: 1s;
+            box-shadow: 0 16px 32px rgba(168, 237, 234, 0.3);
+        }
+        
+        @keyframes float3d {
+            0%, 100% { 
+                transform: translateY(0px) rotate(0deg) scale(1);
             }
+            33% { 
+                transform: translateY(-20px) rotate(5deg) scale(1.05);
+            }
+            66% { 
+                transform: translateY(10px) rotate(-3deg) scale(0.95);
+            }
+        }
+        
+        /* Hero Section */
+        .hero-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            text-align: center;
+            padding: 2rem;
+            position: relative;
+            z-index: 10;
+        }
+        
+        .hero-title {
+            font-family: 'Inter', sans-serif;
+            font-weight: 800;
+            font-size: clamp(2.5rem, 8vw, 5.5rem);
+            line-height: 1.1;
+            color: white;
+            margin-bottom: 1.5rem;
+            max-width: 900px;
+            text-shadow: 0 0 30px rgba(255, 255, 255, 0.1);
+        }
+        
+        .hero-subtitle {
+            font-family: 'Inter', sans-serif;
+            font-weight: 400;
+            font-size: clamp(1rem, 3vw, 1.3rem);
+            color: rgba(255, 255, 255, 0.7);
+            margin-bottom: 3rem;
+            max-width: 600px;
+            line-height: 1.6;
+        }
+        
+        .start-chat-btn {
+            background: white;
+            color: #1a1a2e;
+            padding: 1rem 2.5rem;
+            border-radius: 50px;
+            font-family: 'Inter', sans-serif;
+            font-weight: 600;
+            font-size: 1.1rem;
+            border: none;
+            cursor: pointer;
+            transition: all 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+            position: relative;
+            overflow: hidden;
+            box-shadow: 0 10px 30px rgba(255, 255, 255, 0.2);
+        }
+        
+        .start-chat-btn::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+            transition: left 0.6s;
+        }
+        
+        .start-chat-btn:hover::before {
+            left: 100%;
+        }
+        
+        .start-chat-btn:hover {
+            transform: translateY(-3px) scale(1.05);
+            box-shadow: 0 15px 40px rgba(255, 255, 255, 0.3);
+        }
+        
+        .start-chat-btn:active {
+            transform: translateY(-1px) scale(1.02);
+        }
+        
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            .nav-content {
+                padding: 0 1rem;
+            }
+            
+            .nav-links {
+                gap: 1rem;
+            }
+            
+            .nav-link {
+                font-size: 0.8rem;
+            }
+            
+            .signup-btn {
+                padding: 0.5rem 1rem;
+                font-size: 0.8rem;
+            }
+            
+            .crystal-1, .crystal-2, .crystal-3, .crystal-4, .crystal-5 {
+                width: 60px !important;
+                height: 60px !important;
+            }
+            
+            .hero-container {
+                padding: 1rem;
+            }
+        }
+        
+        /* Hide Streamlit elements */
+        .stDeployButton {
+            display: none;
+        }
+        
+        #MainMenu {
+            visibility: hidden;
+        }
+        
+        .stAppHeader {
+            display: none;
+        }
+        
+        footer {
+            visibility: hidden;
         }
     </style>
     """, unsafe_allow_html=True)
     
-    # Top navigation bar
+    # Navigation Bar
     st.markdown("""
-    <div style="position: fixed; top: 0; left: 0; right: 0; z-index: 1000; 
-                background: rgba(10, 10, 10, 0.9); backdrop-filter: blur(20px); 
-                border-bottom: 1px solid rgba(0, 255, 136, 0.2); padding: 1rem 2rem;
-                display: flex; justify-content: space-between; align-items: center;">
-        <div style="display: flex; align-items: center; gap: 1rem;">
-            <div style="width: 40px; height: 40px; background: linear-gradient(45deg, #00ff88, #00d4ff);
-                        border-radius: 8px; display: flex; align-items: center; justify-content: center;
-                        font-size: 1.2rem; box-shadow: 0 0 20px rgba(0, 255, 136, 0.3);">🛡️</div>
-            <span style="font-family: 'Orbitron', monospace; font-weight: 700; font-size: 1.2rem;
-                         color: #00ff88; text-shadow: 0 0 10px rgba(0, 255, 136, 0.5);">KRYPTONIC AI</span>
-        </div>
-        <div style="display: flex; gap: 2rem; align-items: center;">
-            <span style="color: #888; font-family: 'Rajdhani', sans-serif; font-weight: 600;">LOG IN</span>
-            <span style="color: #888; font-family: 'Rajdhani', sans-serif; font-weight: 600;">★★★★★</span>
-            <span style="color: #888; font-family: 'Rajdhani', sans-serif; font-weight: 600;">ABOUT</span>
-            <span style="background: linear-gradient(45deg, #00ff88, #00d4ff); color: #000;
-                         padding: 0.7rem 1.5rem; border-radius: 25px; font-family: 'Rajdhani', sans-serif;
-                         font-weight: 600; box-shadow: 0 4px 15px rgba(0, 255, 136, 0.3);
-                         text-transform: uppercase; letter-spacing: 1px;">Sign up →</span>
+    <div class="nav-container">
+        <div class="nav-content">
+            <div class="logo-section">
+                <div class="logo-icon">🛡️</div>
+                <div class="logo-text">CRYPTO KNIGHT</div>
+            </div>
+            <div class="nav-links">
+                <a href="#" class="nav-link">LOG IN</a>
+                <div class="nav-rating">
+                    <span class="star">★</span>
+                    <span class="star">★</span>
+                    <span class="star">★</span>
+                    <span class="star">★</span>
+                    <span class="star">★</span>
+                </div>
+                <a href="#" class="nav-link">ABOUT</a>
+                <button class="signup-btn">Sign up →</button>
+            </div>
         </div>
     </div>
     """, unsafe_allow_html=True)
     
-    # Add some spacing for the fixed nav
-    st.markdown("<div style='height: 100px;'></div>", unsafe_allow_html=True)
-    
-    # Floating background elements
+    # Floating 3D Elements
     st.markdown("""
-    <div style="position: relative; overflow: hidden;">
-        <div class="floating-icons" style="top: 10%; left: 10%; color: #00d4ff;">💎</div>
-        <div class="floating-icons" style="top: 20%; right: 15%; color: #ff0080; animation-delay: 2s;">⚡</div>
-        <div class="floating-icons" style="bottom: 30%; left: 15%; color: #00ff88; animation-delay: 4s;">🚀</div>
-        <div class="floating-icons" style="bottom: 20%; right: 10%; color: #8000ff; animation-delay: 6s;">🌟</div>
-        <div class="floating-icons" style="top: 50%; left: 5%; color: #00ff88; animation-delay: 1s;">💰</div>
-        <div class="floating-icons" style="top: 60%; right: 20%; color: #00d4ff; animation-delay: 3s;">🔮</div>
-    </div>
+    <div class="floating-element crystal-1"></div>
+    <div class="floating-element crystal-2"></div>
+    <div class="floating-element crystal-3"></div>
+    <div class="floating-element crystal-4"></div>
+    <div class="floating-element crystal-5"></div>
     """, unsafe_allow_html=True)
     
-    # Main hero section
+    # Hero Section
     st.markdown("""
-    <div class="homepage-hero">
+    <div class="hero-container">
         <h1 class="hero-title">
-            Welcome to Kryptonic AI<br>
+            Welcome to Crypto Knight,<br>
             Your crypto guide, where<br>
             futures collide
         </h1>
         <p class="hero-subtitle">
-            ⚡ Your Crypto Buddy That Actually Gets It ⚡
-        </p>
-        <p class="hero-description">
-            🔮 Smart AI • Live Prices • Easy Explanations 🔮
+            Navigate the crypto universe with AI-powered insights, real-time data, and expert guidance tailored for the next generation of digital investors.
         </p>
     </div>
     """, unsafe_allow_html=True)
     
-    # Create columns for the start chat button
-    col1, col2, col3 = st.columns([1, 2, 1])
+    # Create invisible columns for button positioning
+    col1, col2, col3 = st.columns([1, 1, 1])
     
     with col2:
-        # Fixed button implementation
-        start_chat_button = st.button("🚀 START A CHAT 🚀", key="start_chat_btn", help="Begin your crypto journey!", use_container_width=True)
-        
-        # Handle button click using session state
-        if start_chat_button:
+        # Custom button with enhanced styling
+        if st.button("Start a chat →", key="start_chat_btn", help="Begin your crypto journey!"):
             st.session_state.show_homepage = False
             st.session_state.start_chat = True
             st.rerun()
