@@ -15,7 +15,7 @@ st.set_page_config(
 )
 
 # API Configuration - ADD YOUR GEMINI API KEY HERE
-GEMINI_API_KEY = "AIzaSyB8gVz_X5Uo36pBWaLKZqYjSGD0WMy5pO8"  
+GEMINI_API_KEY = "AIzaSyB8gVz_X5Uo36pBWaLKZqYjSGD0WMy5pO8"
 COINGECKO_BASE_URL = "https://api.coingecko.com/api/v3"
 
 class CryptoChatbot:
@@ -233,7 +233,7 @@ Remember: Crypto prices change super fast! ⚡
             response = "**🔥 What's Hot Right Now:**\n\n"
             for i, coin in enumerate(trending_coins, 1):
                 response += f"{i}. **{coin['item']['name']}** ({coin['item']['symbol'].upper()})\n"
-                response += f"   Market Rank: #{coin['item']['market_cap_rank']}\n\n"
+                response += f"    Market Rank: #{coin['item']['market_cap_rank']}\n\n"
             response += "*These are the coins everyone's talking about today! 🚀*"
             return response
         else:
@@ -445,6 +445,8 @@ def main():
         bottom: 0;
         width: 2px;
         background: linear-gradient(180deg, #00ff88, transparent);
+        /* Initially paused */
+        animation-play-state: paused; 
     }
     
     /* AI Message Styling - Holographic Panel */
@@ -475,6 +477,8 @@ def main():
         border-radius: 15px;
         z-index: -1;
         opacity: 0.5;
+        /* Initially paused */
+        animation-play-state: paused;
     }
     
     .ai-message::after {
@@ -502,6 +506,8 @@ def main():
         background: #00ff88;
         border-radius: 50%;
         box-shadow: 0 0 10px #00ff88;
+        /* Initially paused */
+        animation-play-state: paused;
     }
     
     .ai-message .data-stream::before {
@@ -514,6 +520,8 @@ def main():
         background: #00d4ff;
         border-radius: 50%;
         box-shadow: 0 0 8px #00d4ff;
+        /* Initially paused */
+        animation-play-state: paused;
     }
     
     .ai-message .data-stream::after {
@@ -526,57 +534,12 @@ def main():
         background: #ff0080;
         border-radius: 50%;
         box-shadow: 0 0 6px #ff0080;
+        /* Initially paused */
+        animation-play-state: paused;
     }
     
     /* Dynamic animation styles controlled by JavaScript */
-    .animate-pulse .ai-message .data-stream {
-        animation: dataPulse 1.5s infinite;
-    }
-    
-    .animate-pulse .ai-message .data-stream::before {
-        animation: dataPulse 1.5s infinite 0.3s;
-    }
-    
-    .animate-pulse .ai-message .data-stream::after {
-        animation: dataPulse 1.5s infinite 0.6s;
-    }
-    
-    .animate-pulse .user-message::after {
-        animation: dataPulse 2s infinite;
-    }
-    
-    .animate-pulse .user-message .terminal-cursor {
-        animation: cursorBlink 1s infinite;
-    }
-    
-    .animate-pulse .ai-message::before {
-        animation: borderGlow 3s ease infinite;
-    }
-    
-    /* Add the animations to body when enabled */
-    body.animations-enabled .ai-message .data-stream {
-        animation: dataPulse 1.5s infinite;
-    }
-    
-    body.animations-enabled .ai-message .data-stream::before {
-        animation: dataPulse 1.5s infinite 0.3s;
-    }
-    
-    body.animations-enabled .ai-message .data-stream::after {
-        animation: dataPulse 1.5s infinite 0.6s;
-    }
-    
-    body.animations-enabled .user-message::after {
-        animation: dataPulse 2s infinite;
-    }
-    
-    body.animations-enabled .user-message .terminal-cursor {
-        animation: cursorBlink 1s infinite;
-    }
-    
-    body.animations-enabled .ai-message::before {
-        animation: borderGlow 3s ease infinite;
-    }
+    /* Removed the .animate-pulse class from CSS as it's not needed directly for toggle */
     
     /* Animations */
     @keyframes borderGlow {
@@ -596,6 +559,8 @@ def main():
         height: 1.2em;
         background: #00ff88;
         margin-left: 2px;
+        /* Initially paused */
+        animation-play-state: paused;
     }
     
     @keyframes cursorBlink {
@@ -636,13 +601,13 @@ def main():
             st.session_state.animation_enabled = True
             
         # Animation toggle
-        animation_enabled = st.toggle("🌟 Effects", value=st.session_state.animation_enabled)
+        animation_enabled = st.toggle("🌟 Effects", value=st.session_state.animation_enabled, key="animation_toggle") # Added a key for stability
         
         # Update state and apply CSS class to body
         if st.session_state.animation_enabled != animation_enabled:
             st.session_state.animation_enabled = animation_enabled
-            st.rerun()
-    
+            # No need to rerun here, the JavaScript will handle the state
+            
     with col2:
         st.markdown("""
         <div class="main-header">
@@ -654,20 +619,63 @@ def main():
         </div>
         """, unsafe_allow_html=True)
     
-    # Apply animation class to entire page
-    if st.session_state.get('animation_enabled', True):
-        st.markdown("""
-        <script>
-        document.body.classList.add('animations-enabled');
-        </script>
-        """, unsafe_allow_html=True)
-    else:
-        st.markdown("""
-        <script>
-        document.body.classList.remove('animations-enabled');
-        </script>
-        """, unsafe_allow_html=True)
-    
+    # --- JAVASCRIPT TO CONTROL ANIMATION PLAY STATE ---
+    # This script will run on every render and set the animation-play-state based on the toggle.
+    js_code = f"""
+    <script>
+    function updateAnimationState() {{
+        const isAnimationEnabled = {str(st.session_state.get('animation_enabled', True)).lower()};
+        const elementsToAnimate = [
+            document.querySelector('.ai-message::before'),
+            document.querySelector('.ai-message .data-stream'),
+            document.querySelector('.ai-message .data-stream::before'),
+            document.querySelector('.ai-message .data-stream::after'),
+            document.querySelector('.user-message::after'),
+            document.querySelector('.user-message .terminal-cursor')
+        ];
+
+        // For pseudo-elements, we need to apply styles to their parent and handle it there,
+        // or apply the animation-play-state directly if possible.
+        // For simplicity, let's adjust the CSS directly for existing animations.
+
+        const styleSheet = document.styleSheets[0]; // Get the first stylesheet
+
+        function findRuleAndSetPlayState(selector, playState) {{
+            for (const rule of styleSheet.cssRules) {{
+                if (rule.selectorText && rule.selectorText.includes(selector)) {{
+                    rule.style.animationPlayState = playState;
+                }}
+            }}
+        }}
+
+        const playState = isAnimationEnabled ? 'running' : 'paused';
+
+        findRuleAndSetPlayState('.ai-message::before', playState);
+        findRuleAndSetPlayState('.ai-message .data-stream', playState);
+        findRuleAndSetPlayState('.ai-message .data-stream::before', playState);
+        findRuleAndSetPlayState('.ai-message .data-stream::after', playState);
+        findRuleAndSetPlayState('.user-message::after', playState);
+        findRuleAndSetPlayState('.user-message .terminal-cursor', playState);
+        
+        // Handle glow-text separately as it's a direct element
+        const glowTexts = document.querySelectorAll('.glow-text');
+        glowTexts.forEach(el => {{
+            el.style.animationPlayState = playState;
+        }});
+
+    }}
+
+    // Run on initial load
+    updateAnimationState();
+
+    // Re-run if Streamlit re-renders parts of the page (e.g. from chat input)
+    const observer = new MutationObserver(updateAnimationState);
+    observer.observe(document.body, { childList: true, subtree: true });
+
+    </script>
+    """
+    st.markdown(js_code, unsafe_allow_html=True)
+
     # Check if API key is configured
     if GEMINI_API_KEY == "YOUR_GEMINI_API_KEY_HERE":
         st.markdown("""
