@@ -19,7 +19,7 @@ GEMINI_API_KEY = "AIzaSyDEgi35dDHu0BfHas34-QDy0NjXrAQP2nM"
 COINGECKO_BASE_URL = "https://api.coingecko.com/api/v3"
 
 class CryptoChatbot:
-    def _init_(self, gemini_api_key):
+    def __init__(self, gemini_api_key):  # Fixed: __init__ instead of _init_
         # Configure Gemini API
         genai.configure(api_key=gemini_api_key)
         # Updated model name - try the latest available model
@@ -132,7 +132,7 @@ SPECIAL HANDLING:
 5. If it's completely unrelated to crypto (weather, sports, etc.) - politely redirect: "Hey! I'm all about crypto stuff. What crypto question can I help with?"
 
 RULES:
-1. Focus primarily on crypto-related topics If asked respond with: “I’m so sorry, but I do not have the capabilities to answer this question. I can however assist with any and everything cryptocurrency related!
+1. Focus primarily on crypto-related topics If asked respond with: "I'm so sorry, but I do not have the capabilities to answer this question. I can however assist with any and everything cryptocurrency related!
 2. Handle basic greetings and questions about yourself naturally
 3. Explain things simply but accurately and professionally 
 4. Use current market data when it helps
@@ -201,13 +201,12 @@ Give a helpful, friendly and professional response:"""
             
             change_emoji = "📈" if change_24h > 0 else "📉"
             change_text = "going up" if change_24h > 0 else "going down"
-            change_color = "green" if change_24h > 0 else "red"
             
             response = f"""
 {coin_id.replace('-', ' ').title()} Right Now 💰
 
 💵 Price: ${price:,.2f}
-{change_emoji} 24h: <span style='color:{change_color}'>{change_24h:+.2f}%</span> ({change_text})
+{change_emoji} 24h: {change_24h:+.2f}% ({change_text})
 📊 Market Size: ${market_cap:,.0f}
 💹 Daily Trading: ${volume_24h:,.0f}
 
@@ -880,5 +879,5 @@ def main():
         # Rerun to show new messages with custom styling
         st.rerun()
 
-if __name__ == "_main_":
+if __name__ == "__main__":  # Fixed: __main__ instead of _main_
     main()
