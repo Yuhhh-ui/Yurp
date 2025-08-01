@@ -15,11 +15,11 @@ st.set_page_config(
 )
 
 # API Configuration - ADD YOUR GEMINI API KEY HERE
-GEMINI_API_KEY = "AIzaSyDI-goqVqX2FpAhcK-WPS72UZ4ok2OhSFE"
+GEMINI_API_KEY = "AIzaSyDEgi35dDHu0BfHas34-QDy0NjXrAQP2nM"
 COINGECKO_BASE_URL = "https://api.coingecko.com/api/v3"
 
 class CryptoChatbot:
-    def __init__(self, gemini_api_key):
+    def _init_(self, gemini_api_key):
         # Configure Gemini API
         genai.configure(api_key=gemini_api_key)
         # Updated model name - try the latest available model
@@ -36,25 +36,6 @@ class CryptoChatbot:
             'polkadot', 'dogecoin', 'avalanche-2', 'chainlink', 'polygon',
             'ripple', 'litecoin', 'stellar', 'monero', 'tron'
         ]
-        
-        # Crypto-related keywords for filtering
-        self.crypto_keywords = [
-            'bitcoin', 'btc', 'ethereum', 'eth', 'cryptocurrency', 'crypto', 'blockchain',
-            'altcoin', 'defi', 'nft', 'token', 'coin', 'mining', 'wallet', 'exchange',
-            'trading', 'hodl', 'market cap', 'volume', 'price', 'bullish', 'bearish',
-            'satoshi', 'wei', 'gas', 'fees', 'staking', 'yield', 'liquidity', 'dapp',
-            'smart contract', 'consensus', 'proof of work', 'proof of stake', 'fork',
-            'halving', 'airdrop', 'ico', 'ido', 'dao', 'web3', 'metaverse',
-            'cardano', 'ada', 'solana', 'sol', 'polkadot', 'dot', 'chainlink', 'link',
-            'polygon', 'matic', 'avalanche', 'avax', 'dogecoin', 'doge', 'shiba',
-            'usdt', 'usdc', 'busd', 'stable', 'tether', 'binance', 'coinbase',
-            'bull market', 'bear market', 'moon', 'lambo', 'diamond hands', 'paper hands'
-        ]
-    
-    def is_crypto_related(self, text):
-        """Check if the text is cryptocurrency related"""
-        text_lower = text.lower()
-        return any(keyword in text_lower for keyword in self.crypto_keywords)
     
     def get_crypto_price(self, coin_id):
         """Get current price and basic info for a cryptocurrency"""
@@ -125,18 +106,15 @@ class CryptoChatbot:
         return context
     
     def ask_ai(self, user_question):
-        """Ask Gemini AI about cryptocurrency topics only"""
-        
-        # First check if the question is crypto-related
-        if not self.is_crypto_related(user_question):
-            return "🚫 Hey! I'm only here to chat about crypto stuff - Bitcoin, Ethereum, NFTs, all that good stuff. Hit me with a crypto question! 😄"
+        """Ask Gemini AI about cryptocurrency topics and basic conversation"""
         
         try:
             # Get current market data for context
             market_context = self.get_current_market_data()
             
             # Create prompt for Gemini
-            prompt = f"""You are a professional, teen-friendly cryptocurrency assistant. You're talking to young people (ages 17-30) who want to learn about crypto. Keep the statistics local like for the Caribbean
+            prompt = f"""You are "Kryptonic," a young, super intelligent cryptocurrency expert with a Gen Z persona. Your goal is to be an informative, friendly, encouraging, and fun guide for beginners learning about crypto. You can use Gen Z slang but still sound professional and knowledgeable with a casual, friendly, conversational tone. Your responses should be easy to understand and avoid overwhelming jargon.  
+  
 
 PERSONALITY:
 - Be friendly, enthusiastic, and relatable
@@ -146,16 +124,28 @@ PERSONALITY:
 - Keep it real and honest about risks
 - Make complex topics easy to understand
 
+SPECIAL HANDLING:
+1. If someone greets you (hello, hi, hey) - respond warmly and introduce yourself as Kryptonic, their crypto buddy
+2. If someone asks "who are you", "what are you", "tell me about yourself" - explain you're Kryptonic AI, a crypto expert that helps with crypto questions, prices, and education
+3. If someone asks "what can you do", "how can you help" - list your capabilities: crypto explanations, live prices, market data, trading help, etc.
+4. For basic conversational stuff like "thanks", "goodbye" - respond appropriately but guide back to crypto
+5. If it's completely unrelated to crypto (weather, sports, etc.) - politely redirect: "Hey! I'm all about crypto stuff. What crypto question can I help with?"
+
 RULES:
-1. ONLY answer crypto-related questions
-2. If it's not about crypto, redirect nicely to crypto topics
+1. Focus primarily on crypto-related topics If asked respond with: “I’m so sorry, but I do not have the capabilities to answer this question. I can however assist with any and everything cryptocurrency related!
+2. Handle basic greetings and questions about yourself naturally
 3. Explain things simply but accurately and professionally 
 4. Use current market data when it helps
-5. Keep responses under 100 words
+5. Keep responses under 150 words
 6. Be encouraging but realistic about crypto investing
-7. Always mention that crypto is risky
-8. Answer in point form where neccessary.
-9. **IMPORTANT: DO NOT include any HTML tags or markdown that creates HTML elements in your response, such as `<div>`, `<span>`, etc.**
+7. Always mention that crypto is risky when giving advice
+8. Answer in point form where necessary
+9. *IMPORTANT: DO NOT include any HTML tags or markdown that creates HTML elements in your response, such as <div>, <span>, etc.*
+10. Never be rude or disrespectful
+11. Never use inappropriate language
+12. Do not encourage or give advice on illegal actions
+13. Never give personal opinions to the user
+14. Always provide factual information
 
 TONE EXAMPLES:
 - Instead of "utilize" say "use"
@@ -166,7 +156,7 @@ TONE EXAMPLES:
 Current Market Context:
 {market_context}
 
-Your Question: {user_question}
+User Question: {user_question}
 
 Give a helpful, friendly and professional response:"""
 
@@ -183,7 +173,7 @@ Give a helpful, friendly and professional response:"""
         """Process user query and return appropriate response"""
         user_input_lower = user_input.lower()
         
-        # Check for specific data requests first
+        # Check for specific data requests first (these bypass AI for direct data)
         if "price" in user_input_lower and any(coin.replace('-', '').replace('2', '') in user_input_lower.replace(' ', '') for coin in self.supported_coins):
             for coin in self.supported_coins:
                 if coin.replace('-', '').replace('2', '') in user_input_lower.replace(' ', ''):
@@ -195,7 +185,7 @@ Give a helpful, friendly and professional response:"""
         elif "market" in user_input_lower and ("overview" in user_input_lower or "top" in user_input_lower):
             return self.handle_market_query()
         
-        # For all other questions, use AI
+        # For all other questions, let Gemini AI handle everything
         else:
             return self.ask_ai(user_input)
     
@@ -213,16 +203,18 @@ Give a helpful, friendly and professional response:"""
             change_text = "going up" if change_24h > 0 else "going down"
             change_color = "green" if change_24h > 0 else "red"
             
-            response = f"""**{coin_id.replace('-', ' ').title()} Right Now** 💰
+            response = f"""
+{coin_id.replace('-', ' ').title()} Right Now 💰
 
-💵 **Price:** ${price:,.2f}
-{change_emoji} **24h:** {change_24h:+.2f}% ({change_text})
-📊 **Market Size:** ${market_cap:,.0f}
-💹 **Daily Trading:** ${volume_24h:,.0f}
+💵 Price: ${price:,.2f}
+{change_emoji} 24h: <span style='color:{change_color}'>{change_24h:+.2f}%</span> ({change_text})
+📊 Market Size: ${market_cap:,.0f}
+💹 Daily Trading: ${volume_24h:,.0f}
 
-*Updated: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')} UTC*
+Updated: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')} UTC
 
-Remember: Crypto prices change super fast! ⚡"""
+Remember: Crypto prices change super fast! ⚡
+            """
             return response
         else:
             return f"Hmm, couldn't grab the price for {coin_id} right now 🤔 Maybe try again in a bit?"
@@ -232,11 +224,11 @@ Remember: Crypto prices change super fast! ⚡"""
         trending_data = self.get_trending_coins()
         if trending_data:
             trending_coins = trending_data['coins'][:5]
-            response = "**🔥 What's Hot Right Now:**\n\n"
+            response = "🔥 What's Hot Right Now:\n\n"
             for i, coin in enumerate(trending_coins, 1):
-                response += f"{i}. **{coin['item']['name']}** ({coin['item']['symbol'].upper()})\n"
+                response += f"{i}. {coin['item']['name']} ({coin['item']['symbol'].upper()})\n"
                 response += f"    Market Rank: #{coin['item']['market_cap_rank']}\n\n"
-            response += "*These are the coins everyone's talking about today! 🚀*"
+            response += "These are the coins everyone's talking about today! 🚀"
             return response
         else:
             return "Can't get the trending list right now 😕 Try again in a moment!"
@@ -253,627 +245,170 @@ Remember: Crypto prices change super fast! ⚡"""
             df_display['Market Cap'] = df_display['Market Cap'].apply(lambda x: f"${x:,.0f}")
             
             st.dataframe(df_display, use_container_width=True)
-            return "**📊 Top 10 Biggest Cryptos Right Now:**\n\n*These are ranked by how much they're worth in total! 💎*"
+            return "📊 Top 10 Biggest Cryptos Right Now:\n\n*These are ranked by how much they're worth in total! 💎*"
         else:
             return "Oops! Can't load the market data right now 📊 Give it another shot!"
 
-def show_about_modal():
-    """Display the about modal using Streamlit"""
-    st.markdown("""
-    <style>
-        .about-modal {
-            background: linear-gradient(135deg, rgba(26, 26, 46, 0.95), rgba(22, 33, 62, 0.95));
-            border: 2px solid rgba(102, 126, 234, 0.3);
-            border-radius: 20px;
-            padding: 2.5rem;
-            margin: 2rem 0;
-            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
-            backdrop-filter: blur(20px);
-            position: relative;
-        }
-        
-        .about-modal::before {
-            content: '';
-            position: absolute;
-            top: -2px;
-            left: -2px;
-            right: -2px;
-            bottom: -2px;
-            background: linear-gradient(45deg, #667eea, #764ba2, #667eea);
-            background-size: 300% 300%;
-            border-radius: 20px;
-            z-index: -1;
-            opacity: 0.3;
-            animation: gradientShift 3s ease infinite;
-        }
-        
-        .modal-title {
-            font-family: 'Inter', sans-serif;
-            font-weight: 700;
-            font-size: 2rem;
-            color: white;
-            margin-bottom: 1.5rem;
-            text-align: center;
-            text-shadow: 0 0 20px rgba(102, 126, 234, 0.5);
-        }
-        
-        .modal-content {
-            color: rgba(255, 255, 255, 0.9);
-            font-family: 'Inter', sans-serif;
-            line-height: 1.6;
-        }
-        
-        .modal-content h3 {
-            color: #667eea;
-            margin: 1.5rem 0 1rem 0;
-            font-weight: 600;
-            text-shadow: 0 0 10px rgba(102, 126, 234, 0.3);
-        }
-        
-        .modal-content p {
-            margin-bottom: 1rem;
-        }
-        
-        .feature-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-            gap: 1.5rem;
-            margin: 2rem 0;
-        }
-        
-        .feature-card {
-            background: rgba(102, 126, 234, 0.1);
-            border: 1px solid rgba(102, 126, 234, 0.3);
-            border-radius: 15px;
-            padding: 1.5rem;
-            transition: all 0.3s ease;
-            position: relative;
-            overflow: hidden;
-        }
-        
-        .feature-card::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: -100%;
-            width: 100%;
-            height: 100%;
-            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.1), transparent);
-            transition: left 0.5s;
-        }
-        
-        .feature-card:hover::before {
-            left: 100%;
-        }
-        
-        .feature-card:hover {
-            transform: translateY(-5px);
-            background: rgba(102, 126, 234, 0.15);
-            box-shadow: 0 10px 30px rgba(102, 126, 234, 0.2);
-        }
-        
-        .feature-icon {
-            font-size: 2rem;
-            margin-bottom: 1rem;
-            display: block;
-            text-shadow: 0 0 15px currentColor;
-        }
-        
-        .feature-title {
-            font-weight: 600;
-            font-size: 1.1rem;
-            margin-bottom: 0.5rem;
-            color: #667eea;
-        }
-        
-        .close-button {
-            display: flex;
-            justify-content: center;
-            margin-top: 2rem;
-        }
-        
+def get_theme_css(is_dark_mode, animations_enabled):
+    """Generate CSS based on theme and animation preferences"""
+    
+    # Base colors for themes
+    if is_dark_mode:
+        bg_gradient = """linear-gradient(135deg, 
+            #0a0a0a 0%, 
+            #1a1a2e 25%, 
+            #16213e 50%, 
+            #0f0f23 75%, 
+            #000000 100%)"""
+        primary_color = "#00ff88"
+        secondary_color = "#00d4ff"
+        accent_color = "#ff0080"
+        text_color = "#ffffff"
+        surface_color = "rgba(255, 255, 255, 0.05)"
+        border_color = "rgba(0, 255, 136, 0.3)"
+        button_text_color = "#000000"  # Black text on bright buttons in dark mode
+    else:
+        bg_gradient = """linear-gradient(135deg, 
+            #f8fafc 0%, 
+            #e2e8f0 25%, 
+            #cbd5e1 50%, 
+            #94a3b8 75%, 
+            #64748b 100%)"""
+        primary_color = "#059669"
+        secondary_color = "#0284c7"
+        accent_color = "#dc2626"
+        text_color = "#000000"  # Black text for light mode
+        surface_color = "rgba(255, 255, 255, 0.8)"
+        border_color = "rgba(5, 150, 105, 0.3)"
+        button_text_color = "#ffffff"  # White text on colored buttons in light mode
+    
+    # Animation styles (conditional)
+    animation_css = ""
+    if animations_enabled:
+        animation_css = """
+        /* Animations */
         @keyframes gradientShift {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+        
+        @keyframes borderGlow {
             0%, 100% { background-position: 0% 50%; }
             50% { background-position: 100% 50%; }
         }
-    </style>
-    """, unsafe_allow_html=True)
+        
+        @keyframes dataPulse {
+            0%, 100% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.3; transform: scale(0.8); }
+        }
+        
+        @keyframes cursorBlink {
+            0%, 50% { opacity: 1; }
+            51%, 100% { opacity: 0; }
+        }
+        
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.7; }
+        }
+        
+        @keyframes glitchEffect {
+            0% { transform: translateX(0); }
+            20% { transform: translateX(-2px); }
+            40% { transform: translateX(2px); }
+            60% { transform: translateX(-1px); }
+            80% { transform: translateX(1px); }
+            100% { transform: translateX(0); }
+        }
+        
+        /* Apply animations */
+        .main-header {
+            animation: gradientShift 3s ease infinite;
+        }
+        
+        .ai-message::before {
+            animation: borderGlow 2s ease-in-out infinite;
+        }
+        
+        .ai-message .data-stream {
+            animation: dataPulse 1.5s ease-in-out infinite;
+        }
+        
+        .ai-message .data-stream::before {
+            animation: dataPulse 1.8s ease-in-out infinite;
+        }
+        
+        .ai-message .data-stream::after {
+            animation: dataPulse 2.1s ease-in-out infinite;
+        }
+        
+        .user-message .terminal-cursor {
+            animation: cursorBlink 1s infinite;
+        }
+        
+        .glow-text {
+            animation: pulse 2s infinite;
+        }
+        
+        .user-message:hover {
+            animation: glitchEffect 0.3s ease-in-out;
+        }
+        """
+    else:
+        # Static versions without animations
+        animation_css = """
+        /* Static styles (no animations) */
+        .main-header {
+            animation: none;
+        }
+        
+        .ai-message::before {
+            animation: none;
+        }
+        
+        .ai-message .data-stream {
+            animation: none;
+        }
+        
+        .ai-message .data-stream::before {
+            animation: none;
+        }
+        
+        .ai-message .data-stream::after {
+            animation: none;
+        }
+        
+        .user-message .terminal-cursor {
+            animation: none;
+        }
+        
+        .glow-text {
+            animation: none;
+        }
+        
+        .user-message:hover {
+            animation: none;
+        }
+        """
     
-    st.markdown("""
-    <div class="about-modal">
-        <h2 class="modal-title">🛡️ About Crypto Knight</h2>
-        <div class="modal-content">
-            <p><strong>Welcome to the future of crypto education!</strong></p>
-            
-            <h3>🎯 Our Purpose</h3>
-            <p>Crypto Knight is your personal AI-powered crypto companion, designed to make cryptocurrency accessible, understandable, and exciting for everyone. We bridge the gap between complex crypto concepts and everyday understanding.</p>
-            
-            <h3>🤖 How It Works</h3>
-            <p>Our advanced AI chatbot combines real-time market data with intelligent conversation to provide you with:</p>
-            
-            <div class="feature-grid">
-                <div class="feature-card">
-                    <div class="feature-icon">💬</div>
-                    <div class="feature-title">Smart Conversations</div>
-                    Ask anything about crypto in plain English and get clear, friendly explanations that actually make sense.
-                </div>
-                <div class="feature-card">
-                    <div class="feature-icon">📊</div>
-                    <div class="feature-title">Live Market Data</div>
-                    Real-time prices, trending coins, and market insights powered by CoinGecko API - always up to date.
-                </div>
-                <div class="feature-card">
-                    <div class="feature-icon">🎓</div>
-                    <div class="feature-title">Educational Focus</div>
-                    Learn about blockchain, DeFi, NFTs, and more with beginner-friendly explanations that don't overwhelm.
-                </div>
-                <div class="feature-card">
-                    <div class="feature-icon">🔒</div>
-                    <div class="feature-title">Safe & Focused</div>
-                    Crypto-only conversations with honest risk assessments and responsible investment advice.
-                </div>
-            </div>
-            
-            <h3>💡 What Makes Us Different</h3>
-            <p>
-            • <strong>Teen-Friendly:</strong> We speak your language, no confusing financial jargon<br>
-            • <strong>Real-Time Data:</strong> Always current with live market information<br>
-            • <strong>Caribbean Focus:</strong> Localized insights for our regional users<br>
-            • <strong>Honest & Transparent:</strong> We always mention risks and promote responsible investing<br>
-            • <strong>AI-Powered:</strong> Smart responses that understand context and provide personalized help
-            </p>
-            
-            <h3>🚀 Get Started</h3>
-            <p>Ready to explore the crypto universe? Start chatting and ask me anything - from basic questions like "What is Bitcoin?" to complex topics like DeFi protocols. I'm here to guide you on your crypto journey with patience, knowledge, and a friendly approach!</p>
-            
-            <p style="text-align: center; margin-top: 2rem; color: #667eea; font-style: italic;">
-            "Making crypto simple, one conversation at a time" ✨
-            </p>
-        </div>
-    </div>
-    """, unsafe_allow_html=True)
-
-def show_homepage():
-    """Display the stunning homepage inspired by the reference design"""
-    
-    # Enhanced CSS with 3D elements and animations
-    st.markdown("""
-    <style>
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
-        
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-        
-        .stApp {
-            background: radial-gradient(ellipse at center, #1a1a2e 0%, #16213e 35%, #0f0f23 100%);
-            min-height: 100vh;
-            overflow-x: hidden;
-            position: relative;
-        }
-        
-        /* Animated background gradient */
-        .stApp::before {
-            content: '';
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: 
-                radial-gradient(circle at 20% 50%, rgba(120, 119, 198, 0.3) 0%, transparent 50%),
-                radial-gradient(circle at 80% 20%, rgba(255, 119, 198, 0.3) 0%, transparent 50%),
-                radial-gradient(circle at 40% 80%, rgba(120, 219, 255, 0.3) 0%, transparent 50%);
-            animation: gradientShift 10s ease infinite;
-            z-index: -1;
-        }
-        
-        @keyframes gradientShift {
-            0%, 100% { opacity: 0.4; }
-            50% { opacity: 0.6; }
-        }
-        
-        /* Navigation Bar */
-        .nav-container {
-            position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            z-index: 1000;
-            padding: 1rem 2rem;
-            background: rgba(26, 26, 46, 0.8);
-            backdrop-filter: blur(20px);
-            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-        }
-        
-        .nav-content {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            max-width: 1200px;
-            margin: 0 auto;
-        }
-        
-        .logo-section {
-            display: flex;
-            align-items: center;
-            gap: 0.75rem;
-        }
-        
-        .logo-icon {
-            width: 40px;
-            height: 40px;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            border-radius: 8px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 1.2rem;
-            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
-        }
-        
-        .logo-text {
-            font-family: 'Inter', sans-serif;
-            font-weight: 700;
-            font-size: 1.1rem;
-            color: white;
-            letter-spacing: -0.5px;
-        }
-        
-        .nav-links {
-            display: flex;
-            gap: 2rem;
-            align-items: center;
-        }
-        
-        .nav-rating {
-            display: flex;
-            gap: 2px;
-            padding: 0.5rem;
-        }
-        
-        .star {
-            color: #ffd700;
-            font-size: 0.9rem;
-            text-shadow: 0 0 5px rgba(255, 215, 0, 0.5);
-        }
-        
-        /* 3D Floating Crypto Elements */
-        .floating-element {
-            position: absolute;
-            opacity: 0.9;
-            animation: float3d 8s ease-in-out infinite;
-            font-size: 3rem;
-            user-select: none;
-            pointer-events: none;
-        }
-        
-        /* Bitcoin Coin */
-        .crypto-bitcoin {
-            top: 15%;
-            left: 10%;
-            color: #f7931a;
-            text-shadow: 0 0 20px rgba(247, 147, 26, 0.6);
-            animation-delay: 0s;
-            filter: drop-shadow(0 10px 20px rgba(247, 147, 26, 0.3));
-        }
-        
-        /* Ethereum */
-        .crypto-ethereum {
-            top: 25%;
-            right: 15%;
-            color: #627eea;
-            text-shadow: 0 0 20px rgba(98, 126, 234, 0.6);
-            animation-delay: 2s;
-            filter: drop-shadow(0 8px 16px rgba(98, 126, 234, 0.3));
-        }
-        
-        /* Circuit/Tech Element */
-        .crypto-circuit {
-            bottom: 30%;
-            left: 20%;
-            color: #00ff88;
-            text-shadow: 0 0 20px rgba(0, 255, 136, 0.6);
-            animation-delay: 4s;
-            filter: drop-shadow(0 12px 24px rgba(0, 255, 136, 0.3));
-        }
-        
-        /* Dollar/Money */
-        .crypto-money {
-            bottom: 20%;
-            right: 10%;
-            color: #50c878;
-            text-shadow: 0 0 20px rgba(80, 200, 120, 0.6);
-            animation-delay: 6s;
-            filter: drop-shadow(0 6px 12px rgba(80, 200, 120, 0.3));
-        }
-        
-        /* Rocket/Growth */
-        .crypto-rocket {
-            top: 60%;
-            right: 25%;
-            color: #ff6b6b;
-            text-shadow: 0 0 20px rgba(255, 107, 107, 0.6);
-            animation-delay: 1s;
-            filter: drop-shadow(0 8px 16px rgba(255, 107, 107, 0.3));
-        }
-        
-        /* Shield/Security */
-        .crypto-shield {
-            top: 45%;
-            left: 8%;
-            color: #4ecdc4;
-            text-shadow: 0 0 20px rgba(78, 205, 196, 0.6);
-            animation-delay: 3s;
-            filter: drop-shadow(0 10px 20px rgba(78, 205, 196, 0.3));
-        }
-        
-        /* Chart/Analytics */
-        .crypto-chart {
-            top: 70%;
-            left: 15%;
-            color: #ffd93d;
-            text-shadow: 0 0 20px rgba(255, 217, 61, 0.6);
-            animation-delay: 5s;
-            filter: drop-shadow(0 7px 14px rgba(255, 217, 61, 0.3));
-        }
-        
-        /* Diamond/Value */
-        .crypto-diamond {
-            bottom: 40%;
-            right: 20%;
-            color: #b19cd9;
-            text-shadow: 0 0 20px rgba(177, 156, 217, 0.6);
-            animation-delay: 7s;
-            filter: drop-shadow(0 9px 18px rgba(177, 156, 217, 0.3));
-        }
-        
-        @keyframes float3d {
-            0%, 100% { 
-                transform: translateY(0px) rotate(0deg) scale(1);
-            }
-            33% { 
-                transform: translateY(-25px) rotate(10deg) scale(1.1);
-            }
-            66% { 
-                transform: translateY(15px) rotate(-5deg) scale(0.9);
-            }
-        }
-        
-        /* Special pulse animation for crypto elements */
-        @keyframes cryptoPulse {
-            0%, 100% { 
-                opacity: 0.9;
-                transform: scale(1);
-            }
-            50% { 
-                opacity: 1;
-                transform: scale(1.05);
-            }
-        }
-        
-        /* Apply pulse to certain elements */
-        .crypto-bitcoin, .crypto-ethereum {
-            animation: float3d 8s ease-in-out infinite, cryptoPulse 3s ease-in-out infinite;
-        }
-        
-        /* Hero Section */
-        .hero-container {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            min-height: 100vh;
-            text-align: center;
-            padding: 2rem;
-            position: relative;
-            z-index: 10;
-        }
-        
-        .hero-title {
-            font-family: 'Inter', sans-serif;
-            font-weight: 800;
-            font-size: clamp(2.5rem, 8vw, 5.5rem);
-            line-height: 1.1;
-            color: white;
-            margin-bottom: 1.5rem;
-            max-width: 900px;
-            text-shadow: 0 0 30px rgba(255, 255, 255, 0.1);
-        }
-        
-        .hero-subtitle {
-            font-family: 'Inter', sans-serif;
-            font-weight: 400;
-            font-size: clamp(1rem, 3vw, 1.3rem);
-            color: rgba(255, 255, 255, 0.7);
-            margin-bottom: 3rem;
-            max-width: 600px;
-            line-height: 1.6;
-        }
-        
-        .start-chat-btn {
-            background: white;
-            color: #1a1a2e;
-            padding: 1rem 2.5rem;
-            border-radius: 50px;
-            font-family: 'Inter', sans-serif;
-            font-weight: 600;
-            font-size: 1.1rem;
-            border: none;
-            cursor: pointer;
-            transition: all 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
-            position: relative;
-            overflow: hidden;
-            box-shadow: 0 10px 30px rgba(255, 255, 255, 0.2);
-        }
-        
-        .start-chat-btn::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: -100%;
-            width: 100%;
-            height: 100%;
-            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
-            transition: left 0.6s;
-        }
-        
-        .start-chat-btn:hover::before {
-            left: 100%;
-        }
-        
-        .start-chat-btn:hover {
-            transform: translateY(-3px) scale(1.05);
-            box-shadow: 0 15px 40px rgba(255, 255, 255, 0.3);
-        }
-        
-        .start-chat-btn:active {
-            transform: translateY(-1px) scale(1.02);
-        }
-        
-        /* Responsive Design */
-        @media (max-width: 768px) {
-            .nav-content {
-                padding: 0 1rem;
-            }
-            
-            .nav-links {
-                gap: 1rem;
-            }
-            
-            .crypto-bitcoin, .crypto-ethereum, .crypto-circuit, .crypto-money, 
-            .crypto-rocket, .crypto-shield, .crypto-chart, .crypto-diamond {
-                font-size: 2rem !important;
-            }
-            
-            .hero-container {
-                padding: 1rem;
-            }
-        }
-        
-        /* Hide Streamlit elements */
-        .stDeployButton {
-            display: none;
-        }
-        
-        #MainMenu {
-            visibility: hidden;
-        }
-        
-        .stAppHeader {
-            display: none;
-        }
-        
-        footer {
-            visibility: hidden;
-        }
-    </style>
-    """, unsafe_allow_html=True)
-    
-    # Navigation Bar with About functionality
-    st.markdown("""
-    <div class="nav-container">
-        <div class="nav-content">
-            <div class="logo-section">
-                <div class="logo-icon">🛡️</div>
-                <div class="logo-text">CRYPTO KNIGHT</div>
-            </div>
-            <div class="nav-links">
-                <div class="nav-rating">
-                    <span class="star">★</span>
-                    <span class="star">★</span>
-                    <span class="star">★</span>
-                    <span class="star">★</span>
-                    <span class="star">★</span>
-                </div>
-            </div>
-        </div>
-    </div>
-    """, unsafe_allow_html=True)
-    
-    # Add About button using Streamlit
-    col1, col2, col3 = st.columns([1, 2, 1])
-    with col3:
-        st.markdown("<div style='padding-top: 80px;'></div>", unsafe_allow_html=True)  # Space for fixed nav
-        if st.button("ABOUT", key="about_btn", help="Learn more about Crypto Knight"):
-            st.session_state.show_about = True
-    
-    # Show About Modal if requested
-    if 'show_about' in st.session_state and st.session_state.show_about:
-        show_about_modal()
-        
-        # Add close button
-        col1, col2, col3 = st.columns([1, 1, 1])
-        with col2:
-            if st.button("✕ Close", key="close_about_btn"):
-                st.session_state.show_about = False
-                st.rerun()
-        return  # Don't show the rest of the homepage when modal is open
-    
-    # Floating 3D Crypto Elements
-    st.markdown("""
-    <div class="floating-element crypto-bitcoin">₿</div>
-    <div class="floating-element crypto-ethereum">⟠</div>
-    <div class="floating-element crypto-circuit">⚡</div>
-    <div class="floating-element crypto-money">💰</div>
-    <div class="floating-element crypto-rocket">🚀</div>
-    <div class="floating-element crypto-shield">🛡️</div>
-    <div class="floating-element crypto-chart">📈</div>
-    <div class="floating-element crypto-diamond">💎</div>
-    """, unsafe_allow_html=True)
-    
-    # Hero Section
-    st.markdown("""
-    <div class="hero-container">
-        <h1 class="hero-title">
-            Welcome to Crypto Knight,<br>
-            Your crypto guide, where<br>
-            futures collide
-        </h1>
-        <p class="hero-subtitle">
-            Navigate the crypto universe with AI-powered insights, real-time data, and expert guidance tailored for the next generation of digital investors.
-        </p>
-    </div>
-    """, unsafe_allow_html=True)
-    
-    # Create invisible columns for button positioning
-    col1, col2, col3 = st.columns([1, 1, 1])
-    
-    with col2:
-        # Custom button with enhanced styling
-        if st.button("Start a chat →", key="start_chat_btn", help="Begin your crypto journey!"):
-            st.session_state.show_homepage = False
-            st.session_state.start_chat = True
-            st.rerun()
-
-def show_chat():
-    """Display the chat interface"""
-    # Load the crypto theme CSS
-    st.markdown("""
+    return f"""
     <style>
     /* Import cyber fonts */
     @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Rajdhani:wght@300;400;600;700&display=swap');
     
     /* Main app styling */
-    .stApp {
-        background: linear-gradient(135deg, 
-            #0a0a0a 0%, 
-            #1a1a2e 25%, 
-            #16213e 50%, 
-            #0f0f23 75%, 
-            #000000 100%);
-        color: #00ff88;
-    }
+    .stApp {{
+        background: {bg_gradient};
+        color: {text_color};
+    }}
     
     /* Header styling */
-    .main-header {
+    .main-header {{
         text-align: center;
         padding: 2rem 0;
-        background: linear-gradient(90deg, #00ff88, #00d4ff, #ff0080, #00ff88);
+        background: linear-gradient(90deg, {primary_color}, {secondary_color}, {accent_color}, {primary_color});
         background-size: 300% 300%;
-        animation: gradientShift 3s ease infinite;
         -webkit-background-clip: text;
         -webkit-text-fill-color: transparent;
         background-clip: text;
@@ -882,27 +417,22 @@ def show_chat():
         font-size: 3.5rem;
         text-shadow: 0 0 30px rgba(0, 255, 136, 0.5);
         margin-bottom: 1rem;
-    }
+    }}
     
-    @keyframes gradientShift {
-        0% { background-position: 0% 50%; }
-        50% { background-position: 100% 50%; }
-        100% { background-position: 0% 50%; }
-    }
-    
-    .sub-header {
+    .sub-header {{
         text-align: center;
-        color: #888;
+        color: {text_color};
+        opacity: 0.7;
         font-family: 'Rajdhani', sans-serif;
         font-size: 1.2rem;
         margin-bottom: 2rem;
         padding: 0 2rem;
-    }
+    }}
     
     /* Button styling */
-    .stButton > button {
-        background: linear-gradient(45deg, #00ff88, #00d4ff);
-        color: #000;
+    .stButton > button {{
+        background: linear-gradient(45deg, {primary_color}, {secondary_color});
+        color: {button_text_color};
         border: none;
         border-radius: 8px;
         font-family: 'Rajdhani', sans-serif;
@@ -910,116 +440,101 @@ def show_chat():
         font-size: 1rem;
         padding: 0.7rem 1.5rem;
         transition: all 0.3s ease;
-        box-shadow: 0 4px 15px rgba(0, 255, 136, 0.3);
+        box-shadow: 0 4px 15px {border_color};
         text-transform: uppercase;
         letter-spacing: 1px;
-    }
+    }}
     
-    .stButton > button:hover {
-        background: linear-gradient(45deg, #ff0080, #00ff88);
+    .stButton > button:hover {{
+        background: linear-gradient(45deg, {accent_color}, {primary_color});
         transform: translateY(-2px);
         box-shadow: 0 6px 20px rgba(255, 0, 128, 0.4);
-    }
+    }}
+    
+    /* Sidebar styling */
+    .stSidebar {{
+        background: {surface_color};
+        backdrop-filter: blur(10px);
+    }}
     
     /* Sidebar headers */
-    .sidebar-header {
-        color: #00ff88;
+    .sidebar-header {{
+        color: {primary_color};
         font-family: 'Orbitron', monospace;
         font-weight: 700;
         font-size: 1.3rem;
         text-align: center;
         margin-bottom: 1rem;
         text-shadow: 0 0 10px rgba(0, 255, 136, 0.5);
-    }
+    }}
     
     /* Feature list styling */
-    .feature-list {
-        background: rgba(0, 255, 136, 0.05);
-        border-left: 3px solid #00ff88;
+    .feature-list {{
+        background: {surface_color};
+        border-left: 3px solid {primary_color};
         padding: 1rem;
         margin: 1rem 0;
         border-radius: 0 8px 8px 0;
         font-family: 'Rajdhani', sans-serif;
-    }
+        color: {text_color};
+    }}
     
     /* Status indicators */
-    .status-success {
-        color: #00ff88;
-        background: rgba(0, 255, 136, 0.1);
+    .status-success {{
+        color: {primary_color};
+        background: {surface_color};
         padding: 0.5rem 1rem;
         border-radius: 6px;
-        border-left: 4px solid #00ff88;
+        border-left: 4px solid {primary_color};
         font-family: 'Rajdhani', sans-serif;
         font-weight: 600;
-    }
+    }}
     
-    .status-error {
-        color: #ff0080;
-        background: rgba(255, 0, 128, 0.1);
+    .status-error {{
+        color: {accent_color};
+        background: {surface_color};
         padding: 0.5rem 1rem;
         border-radius: 6px;
-        border-left: 4px solid #ff0080;
+        border-left: 4px solid {accent_color};
         font-family: 'Rajdhani', sans-serif;
         font-weight: 600;
-    }
-    
-    /* Glowing effects */
-    .glow-text {
-        text-shadow: 0 0 10px currentColor;
-        animation: pulse 2s infinite;
-    }
-    
-    @keyframes pulse {
-        0%, 100% { opacity: 1; }
-        50% { opacity: 0.7; }
-    }
-    
-    /* Welcome message styling */
-    .welcome-container {
-        background: linear-gradient(135deg, rgba(0, 255, 136, 0.1), rgba(0, 212, 255, 0.1));
-        border: 2px solid #00ff88;
-        border-radius: 15px;
-        padding: 2rem;
-        margin: 1rem 0;
-        box-shadow: 0 0 30px rgba(0, 255, 136, 0.3);
-        backdrop-filter: blur(10px);
-        font-family: 'Rajdhani', sans-serif;
-    }
+    }}
     
     /* Custom Chat Styling */
-    .stChatMessage {
+    .stChatMessage {{
         background: transparent !important;
         border: none !important;
         padding: 0 !important;
         margin: 1rem 0 !important;
-    }
+    }}
     
     /* Hide default chat avatars */
-    .stChatMessage > div:first-child {
+    .stChatMessage > div:first-child {{
         display: none !important;
-    }
+    }}
     
     /* User Message Styling - Terminal Input Style */
-    .user-message {
-        background: linear-gradient(90deg, rgba(0, 255, 136, 0.1), rgba(0, 212, 255, 0.05));
-        border-left: 4px solid #00ff88;
+    .user-message {{
+        background: linear-gradient(90deg, {surface_color}, rgba(0, 212, 255, 0.05));
+        border-left: 4px solid {primary_color};
         border-radius: 0 12px 12px 0;
         padding: 1rem 1.5rem;
         margin: 1rem 0;
         position: relative;
         font-family: 'Rajdhani', monospace;
-        box-shadow: 0 0 20px rgba(0, 255, 136, 0.2);
+        box-shadow: 0 0 20px {border_color};
         backdrop-filter: blur(5px);
-    }
+        color: {text_color};
+    }}
     
-    .user-message::before {
+    .user-message::before {{
         content: ">";
         position: absolute;
         left: -2px;
         top: 50%;
         transform: translateY(-50%);
-        background: #00ff88;
-        color: #000;
+        background: {primary_color};
+        color: {button_text_color};
         width: 20px;
         height: 20px;
         border-radius: 50%;
@@ -1029,186 +544,148 @@ def show_chat():
         font-weight: bold;
         font-size: 12px;
         box-shadow: 0 0 10px rgba(0, 255, 136, 0.5);
-    }
+    }}
     
-    .user-message::after {
+    .user-message::after {{
         content: "";
         position: absolute;
         right: -1px;
         top: 0;
         bottom: 0;
         width: 2px;
-        background: linear-gradient(180deg, #00ff88, transparent);
-        animation-play-state: running; 
-    }
+        background: linear-gradient(180deg, {primary_color}, transparent);
+    }}
     
     /* AI Message Styling - Holographic Panel */
-    .ai-message {
+    .ai-message {{
         background: linear-gradient(135deg, 
             rgba(0, 212, 255, 0.1) 0%,
             rgba(255, 0, 128, 0.1) 50%,
             rgba(0, 255, 136, 0.05) 100%);
-        border: 1px solid rgba(0, 212, 255, 0.3);
+        border: 1px solid {border_color};
         border-radius: 15px;
         padding: 1.5rem;
         margin: 1rem 0;
         position: relative;
         backdrop-filter: blur(10px);
-        box-shadow: 0 8px 32px rgba(0, 212, 255, 0.2);
+        box-shadow: 0 8px 32px {border_color};
         overflow: hidden;
-    }
+        color: {text_color};
+    }}
     
-    .ai-message::before {
+    .ai-message::before {{
         content: "";
         position: absolute;
         top: -2px;
         left: -2px;
         right: -2px;
         bottom: -2px;
-        background: linear-gradient(45deg, #00d4ff, #ff0080, #00ff88, #00d4ff);
+        background: linear-gradient(45deg, {secondary_color}, {accent_color}, {primary_color}, {secondary_color});
         background-size: 300% 300%;
         border-radius: 15px;
         z-index: -1;
         opacity: 0.5;
-        animation-play-state: running;
-    }
+    }}
     
-    .ai-message::after {
+    .ai-message::after {{
         content: "◇ KRYPTONIC AI";
         position: absolute;
         top: -8px;
         left: 20px;
-        background: linear-gradient(90deg, #00d4ff, #ff0080);
-        color: #000;
+        background: linear-gradient(90deg, {secondary_color}, {accent_color});
+        color: {button_text_color};
         padding: 2px 8px;
         font-size: 10px;
         font-weight: bold;
         border-radius: 4px;
         font-family: 'Orbitron', monospace;
         letter-spacing: 1px;
-    }
+    }}
     
     /* Data stream effect for AI messages */
-    .ai-message .data-stream {
+    .ai-message .data-stream {{
         position: absolute;
         right: 10px;
         top: 10px;
         width: 8px;
         height: 8px;
-        background: #00ff88;
+        background: {primary_color};
         border-radius: 50%;
-        box-shadow: 0 0 10px #00ff88;
-        animation-play-state: running;
-    }
+        box-shadow: 0 0 10px {primary_color};
+    }}
     
-    .ai-message .data-stream::before {
+    .ai-message .data-stream::before {{
         content: "";
         position: absolute;
         right: 15px;
         top: 0;
         width: 6px;
         height: 6px;
-        background: #00d4ff;
+        background: {secondary_color};
         border-radius: 50%;
-        box-shadow: 0 0 8px #00d4ff;
-        animation-play-state: running;
-    }
+        box-shadow: 0 0 8px {secondary_color};
+    }}
     
-    .ai-message .data-stream::after {
+    .ai-message .data-stream::after {{
         content: "";
         position: absolute;
         right: 25px;
         top: 1px;
         width: 4px;
         height: 4px;
-        background: #ff0080;
+        background: {accent_color};
         border-radius: 50%;
-        box-shadow: 0 0 6px #ff0080;
-        animation-play-state: running;
-    }
-    
-    /* Animations */
-    @keyframes borderGlow {
-        0%, 100% { background-position: 0% 50%; }
-        50% { background-position: 100% 50%; }
-    }
-    
-    @keyframes dataPulse {
-        0%, 100% { opacity: 1; transform: scale(1); }
-        50% { opacity: 0.3; transform: scale(0.8); }
-    }
+        box-shadow: 0 0 6px {accent_color};
+    }}
     
     /* Terminal cursor effect for user input */
-    .user-message .terminal-cursor {
+    .user-message .terminal-cursor {{
         display: inline-block;
         width: 2px;
         height: 1.2em;
-        background: #00ff88;
+        background: {primary_color};
         margin-left: 2px;
-        animation-play-state: running;
-    }
+    }}
     
-    @keyframes cursorBlink {
-        0%, 50% { opacity: 1; }
-        51%, 100% { opacity: 0; }
-    }
-    
-    /* Glitch effect for user messages on hover */
-    .user-message:hover {
-        animation: glitchEffect 0.3s ease-in-out;
-    }
-    
-    @keyframes glitchEffect {
-        0% { transform: translateX(0); }
-        20% { transform: translateX(-2px); }
-        40% { transform: translateX(2px); }
-        60% { transform: translateX(-1px); }
-        80% { transform: translateX(1px); }
-        100% { transform: translateX(0); }
-    }
+    /* Glowing effects */
+    .glow-text {{
+        text-shadow: 0 0 10px currentColor;
+    }}
     
     /* Hologram effect for AI messages */
-    .ai-message:hover {
+    .ai-message:hover {{
         transform: translateY(-2px);
-        box-shadow: 0 12px 40px rgba(0, 212, 255, 0.3);
+        box-shadow: 0 12px 40px {border_color};
         transition: all 0.3s ease;
-    }
+    }}
     
-    /* Back to homepage button */
-    .back-to-home {
-        position: fixed;
-        top: 1rem;
-        left: 1rem;
-        z-index: 1000;
-        background: linear-gradient(45deg, #ff0080, #00ff88);
-        color: #000;
-        border: none;
-        border-radius: 25px;
-        padding: 0.5rem 1rem;
-        font-family: 'Rajdhani', sans-serif;
-        font-weight: 600;
-        text-transform: uppercase;
-        letter-spacing: 1px;
-        cursor: pointer;
-        box-shadow: 0 4px 15px rgba(255, 0, 128, 0.3);
-        transition: all 0.3s ease;
-    }
+    /* Toggle switches styling */
+    .stToggle > div {{
+        background: {surface_color} !important;
+        border: 1px solid {border_color} !important;
+    }}
     
-    .back-to-home:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 6px 20px rgba(255, 0, 128, 0.5);
-    }
+    /* Dataframe styling */
+    .stDataFrame {{
+        background: {surface_color};
+        border-radius: 10px;
+        border: 1px solid {border_color};
+    }}
+    
+    {animation_css}
     
     </style>
-    """, unsafe_allow_html=True)
+    """
+
+def main():
+    # Initialize session state for theme and animations
+    if 'dark_mode' not in st.session_state:
+        st.session_state.dark_mode = True
+    if 'animations_enabled' not in st.session_state:
+        st.session_state.animations_enabled = True
     
-    # Back to homepage button
-    back_home_button = st.button("🏠 ← BACK TO HOME", key="back_home_btn")
-    if back_home_button:
-        st.session_state.show_homepage = True
-        st.session_state.start_chat = False
-        st.session_state.messages = []  # Clear chat history
-        st.rerun()
+    # Apply theme CSS
+    st.markdown(get_theme_css(st.session_state.dark_mode, st.session_state.animations_enabled), unsafe_allow_html=True)
     
     # Custom header with crypto styling
     col1, col2, col3 = st.columns([1, 2, 1])
@@ -1245,8 +722,27 @@ def show_chat():
         """, unsafe_allow_html=True)
         return
     
-    # Sidebar with quick actions
+    # Sidebar with quick actions and controls
     with st.sidebar:
+        st.markdown('<div class="sidebar-header">⚙ CONTROLS ⚙</div>', unsafe_allow_html=True)
+        
+        # Theme and animation controls
+        col1, col2 = st.columns(2)
+        with col1:
+            dark_mode = st.toggle("🌙 Dark Mode", value=st.session_state.dark_mode, key="dark_toggle")
+        with col2:
+            animations = st.toggle("✨ Animations", value=st.session_state.animations_enabled, key="anim_toggle")
+        
+        # Update session state and rerun if changed
+        if dark_mode != st.session_state.dark_mode:
+            st.session_state.dark_mode = dark_mode
+            st.rerun()
+        
+        if animations != st.session_state.animations_enabled:
+            st.session_state.animations_enabled = animations
+            st.rerun()
+        
+        st.markdown("---")
         st.markdown('<div class="sidebar-header">⚡ QUICK STUFF ⚡</div>', unsafe_allow_html=True)
         
         # Initialize chatbot
@@ -1279,16 +775,14 @@ def show_chat():
         col1, col2 = st.columns(2)
         
         with col1:
-            trending_btn = st.button("🔥 TRENDING", key="trending_btn")
-            if trending_btn:
+            if st.button("🔥 TRENDING"):
                 response = st.session_state.chatbot.handle_trending_query()
                 if 'messages' not in st.session_state:
                     st.session_state.messages = []
                 st.session_state.messages.append({"role": "assistant", "content": response})
                 st.rerun()
             
-            btc_price_btn = st.button("💰 BTC PRICE", key="btc_price_btn")
-            if btc_price_btn:
+            if st.button("💰 BTC PRICE"):
                 response = st.session_state.chatbot.handle_price_query("bitcoin")
                 if 'messages' not in st.session_state:
                     st.session_state.messages = []
@@ -1296,16 +790,14 @@ def show_chat():
                 st.rerun()
         
         with col2:
-            top_coins_btn = st.button("📊 TOP COINS", key="top_coins_btn")
-            if top_coins_btn:
+            if st.button("📊 TOP COINS"):
                 response = st.session_state.chatbot.handle_market_query()
                 if 'messages' not in st.session_state:
                     st.session_state.messages = []
                 st.session_state.messages.append({"role": "assistant", "content": response})
                 st.rerun()
             
-            clear_chat_btn = st.button("🔄 CLEAR CHAT", key="clear_chat_btn")
-            if clear_chat_btn:
+            if st.button("🔄 CLEAR CHAT"):
                 st.session_state.messages = []
                 st.rerun()
         
@@ -1314,7 +806,7 @@ def show_chat():
         # Features section with crypto styling
         st.markdown("""
         <div class="feature-list">
-        <div class="sidebar-header">🛡️ WHAT I CAN DO</div>
+        <div class="sidebar-header">🛡 WHAT I CAN DO</div>
         
         <strong>🤖 Smart Crypto Help</strong><br>
         • Explain crypto in simple terms<br>
@@ -1350,7 +842,7 @@ def show_chat():
             """, unsafe_allow_html=True)
             return
     
-    # Initialize chat history without the welcome message
+    # Initialize chat history
     if "messages" not in st.session_state:
         st.session_state.messages = []
     
@@ -1374,8 +866,7 @@ def show_chat():
             """, unsafe_allow_html=True)
     
     # Chat input with enhanced styling
-    prompt = st.chat_input("🤑Ask me anything about crypto...")
-    if prompt:
+    if prompt := st.chat_input("🤑Ask me anything about crypto..."):
         # Add user message to chat history
         st.session_state.messages.append({"role": "user", "content": prompt})
         
@@ -1389,20 +880,5 @@ def show_chat():
         # Rerun to show new messages with custom styling
         st.rerun()
 
-def main():
-    # Initialize session states
-    if 'show_homepage' not in st.session_state:
-        st.session_state.show_homepage = True
-    if 'start_chat' not in st.session_state:
-        st.session_state.start_chat = False
-    if 'show_about' not in st.session_state:
-        st.session_state.show_about = False
-    
-    # Show homepage or chat based on state
-    if st.session_state.show_homepage:
-        show_homepage()
-    else:
-        show_chat()
-
-if __name__ == "__main__":
+if _name_ == "_main_":
     main()
