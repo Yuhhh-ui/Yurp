@@ -880,5 +880,5 @@ def main():
         # Rerun to show new messages with custom styling
         st.rerun()
 
-if _name_ == "_main_":
+if __name__ == "_main_":
     main()
