@@ -5,30 +5,89 @@ from datetime import datetime
 import pandas as pd
 import google.generativeai as genai
 import re
+from typing import List, Dict
+import os
 
-# Page configuration
-st.set_page_config(
-    page_title="Kryptonic AI",
-    page_icon="🚀",
-    layout="wide",
-    initial_sidebar_state="expanded"
-)
+# --- Define Colors and Styles ---
+BG_GRADIENT_COLOR_1 = "#2a1a4a"
+BG_GRADIENT_COLOR_2 = "#1e1538"
+BG_GRADIENT_COLOR_3 = "#161028"
+BG_GRADIENT_COLOR_4 = "#0f0818"
+BG_GRADIENT_COLOR_5 = "#000000"
 
-# API Configuration - ADD YOUR GEMINI API KEY HERE
-GEMINI_API_KEY = "AIzaSyDEgi35dDHu0BfHas34-QDy0NjXrAQP2nM"
+TEXT_COLOR = "white"
+BUTTON_BG_COLOR = "white"
+BUTTON_TEXT_COLOR = "#1f2937"
+HIGHLIGHT_GRADIENT_START = "#8b5cf6"
+HIGHLIGHT_GRADIENT_MIDDLE = "#3b82f6"
+HIGHLIGHT_GRADIENT_END = "#ec4899"
+STARS_COLOR = "#fbbf24"
+
+# Chatbot specific colors
+PRIMARY_COLOR = "#00ff88"
+SECONDARY_COLOR = "#00d4ff"
+ACCENT_COLOR = "#ff0080"
+SURFACE_COLOR = "rgba(255, 255, 255, 0.05)"
+BORDER_COLOR = "rgba(0, 255, 136, 0.3)"
+
+# API Configuration - FIXED: Use environment variable for security
+GEMINI_API_KEY = os.getenv("GEMINI_API_KEY", "AIzaSyDEgi35dDHu0BfHas34-QDy0NjXrAQP2nM")
 COINGECKO_BASE_URL = "https://api.coingecko.com/api/v3"
 
+# --- Streamlit Page Configuration ---
+st.set_page_config(
+    page_title="Kryptonic AI - Your Crypto Guide",
+    page_icon="🚀",
+    layout="wide",
+    initial_sidebar_state="collapsed"
+)
+
+def translate_text(text: str, target_language_code: str) -> str:
+    """
+    Translates text to a target language using the Gemini API.
+    
+    Args:
+        text (str): The text to be translated.
+        target_language_code (str): The language code (e.g., 'en', 'es', 'fr').
+        
+    Returns:
+        str: The translated text, or a fallback message if translation fails.
+    """
+    if target_language_code == 'en':
+        return text
+
+    try:
+        genai.configure(api_key=GEMINI_API_KEY)
+        prompt = f"""
+        Translate the following text into the language with the code '{target_language_code}':
+        
+        TEXT TO TRANSLATE:
+        "{text}"
+        
+        Translated Text:
+        """
+        
+        model = genai.GenerativeModel('gemini-1.5-flash')
+        response = model.generate_content(prompt)
+        return response.text
+    except Exception:
+        return f"Translation failed. Original response: {text}"
+
 class CryptoChatbot:
-    def __init__(self, gemini_api_key):  # Fixed: __init__ instead of _init_
+    """A chatbot class that fetches real-time crypto data and answers user queries."""
+    
+    # FIXED: Double underscores for constructor
+    def __init__(self, gemini_api_key):
         # Configure Gemini API
         genai.configure(api_key=gemini_api_key)
-        # Updated model name - try the latest available model
+        
+        # Initialize the generative model
         try:
             self.model = genai.GenerativeModel('gemini-1.5-flash')
-        except:
+        except Exception:
             try:
                 self.model = genai.GenerativeModel('gemini-1.0-pro')
-            except:
+            except Exception:
                 self.model = genai.GenerativeModel('models/gemini-pro')
         
         self.supported_coins = [
@@ -36,9 +95,49 @@ class CryptoChatbot:
             'polkadot', 'dogecoin', 'avalanche-2', 'chainlink', 'polygon',
             'ripple', 'litecoin', 'stellar', 'monero', 'tron'
         ]
+
+        # Load CSV data once and store as a DataFrame for efficient searching
+        self.csv_data = self._load_csv_data()
     
+    def _load_csv_data(self):
+        """Loads data from crypto.csv and returns a DataFrame."""
+        try:
+            df = pd.read_csv('crypto.csv')
+            return df
+        except FileNotFoundError:
+            st.warning("CSV file 'crypto.csv' not found. CSV-based Q&A will not be available.")
+            return pd.DataFrame()
+        except Exception as e:
+            st.warning(f"Error loading CSV data: {e}")
+            return pd.DataFrame()
+
+    def _find_relevant_csv_answer(self, user_question):
+        """Searches the CSV data for a direct answer to the user's question."""
+        if self.csv_data.empty:
+            return None
+        
+        try:
+            # Simple keyword matching to find a relevant answer
+            user_question_lower = user_question.lower()
+            
+            for _, row in self.csv_data.iterrows():
+                if 'question' in row and 'answer' in row:
+                    question_lower = str(row['question']).lower()
+                    
+                    # Check for keyword overlap
+                    question_words = set(question_lower.split())
+                    user_words = set(user_question_lower.split())
+                    
+                    # If there's significant overlap, return the answer
+                    if len(question_words.intersection(user_words)) >= 2:
+                        return str(row['answer'])
+        except Exception as e:
+            st.warning(f"Error searching CSV data: {e}")
+        
+        return None
+
     def get_crypto_price(self, coin_id):
-        """Get current price and basic info for a cryptocurrency"""
+        """Get current price and basic info for a cryptocurrency."""
         try:
             url = f"{COINGECKO_BASE_URL}/simple/price"
             params = {
@@ -48,26 +147,26 @@ class CryptoChatbot:
                 'include_market_cap': 'true',
                 'include_24hr_vol': 'true'
             }
-            response = requests.get(url, params=params)
-            if response.status_code == 200:
-                return response.json()
-            return None
+            response = requests.get(url, params=params, timeout=10)
+            response.raise_for_status()
+            return response.json()
         except Exception as e:
+            st.error(f"Error fetching data for {coin_id}: {e}")
             return None
     
     def get_trending_coins(self):
-        """Get trending cryptocurrencies"""
+        """Get trending cryptocurrencies."""
         try:
             url = f"{COINGECKO_BASE_URL}/search/trending"
-            response = requests.get(url)
-            if response.status_code == 200:
-                return response.json()
-            return None
+            response = requests.get(url, timeout=10)
+            response.raise_for_status()
+            return response.json()
         except Exception as e:
+            st.error(f"Error fetching trending coins: {e}")
             return None
     
-    def get_market_overview(self):
-        """Get top cryptocurrencies by market cap"""
+    def get_market_overview_df(self):
+        """Get top cryptocurrencies by market cap and return a DataFrame."""
         try:
             url = f"{COINGECKO_BASE_URL}/coins/markets"
             params = {
@@ -77,26 +176,35 @@ class CryptoChatbot:
                 'page': 1,
                 'sparkline': 'false'
             }
-            response = requests.get(url, params=params)
-            if response.status_code == 200:
-                return response.json()
-            return None
+            response = requests.get(url, params=params, timeout=10)
+            response.raise_for_status()
+            market_data = response.json()
+            
+            df = pd.DataFrame(market_data)
+            df_display = df[['name', 'symbol', 'current_price', 'price_change_percentage_24h', 'market_cap']].copy()
+            df_display.columns = ['Coin', 'Symbol', 'Price', '24h Change', 'Market Cap']
+            df_display['Price'] = df_display['Price'].apply(lambda x: f"${x:,.2f}")
+            df_display['24h Change'] = df_display['24h Change'].apply(lambda x: f"{x:+.2f}%")
+            df_display['Market Cap'] = df_display['Market Cap'].apply(lambda x: f"${x:,.0f}")
+            
+            return df_display
         except Exception as e:
-            return None
-    
+            st.error(f"Error fetching market overview: {e}")
+            return pd.DataFrame()
+            
     def get_current_market_data(self, num_top_coins=5, num_trending_coins=3):
-        """Get current market data to provide context to AI"""
-        market_data = self.get_market_overview()
+        """Get current market data to provide context to AI."""
+        market_data = self.get_market_overview_df()
         trending_data = self.get_trending_coins()
         
         context = "Current Crypto Market Data:\n"
         
-        if market_data:
+        if not market_data.empty:
             context += f"Top {num_top_coins} Cryptocurrencies by Market Cap:\n"
-            for i, coin in enumerate(market_data[:num_top_coins], 1):
-                price = coin['current_price']
-                change = coin['price_change_percentage_24h']
-                context += f"{i}. {coin['name']} ({coin['symbol'].upper()}): ${price:,.2f} ({change:+.2f}%)\n"
+            # FIXED: Use iloc for integer-based indexing
+            for i in range(min(num_top_coins, len(market_data))):
+                row = market_data.iloc[i]
+                context += f"{i+1}. {row['Coin']} ({row['Symbol']}): {row['Price']} ({row['24h Change']})\n"
         
         if trending_data and 'coins' in trending_data:
             context += f"\nTrending Coins (Top {num_trending_coins}):\n"
@@ -105,16 +213,41 @@ class CryptoChatbot:
         
         return context
     
-    def ask_ai(self, user_question):
-        """Ask Gemini AI about cryptocurrency topics and basic conversation"""
+    def build_conversation_context(self, messages):
+        """Build conversation context from message history."""
+        if not messages:
+            return ""
+        
+        context = "Previous conversation context:\n"
+        # Only include the last 10 messages to avoid token limits
+        recent_messages = messages[-10:] if len(messages) > 10 else messages
+        
+        for msg in recent_messages:
+            if msg["role"] == "user":
+                context += f"User: {msg['content']}\n"
+            elif msg["role"] == "assistant" and msg.get("type") != "dataframe":
+                # Truncate long responses for context
+                content = msg['content'][:200] + "..." if len(msg['content']) > 200 else msg['content']
+                context += f"Kryptonic: {content}\n"
+        
+        return context
+    
+    def ask_ai(self, user_question, language, conversation_history):
+        """Ask Gemini AI about cryptocurrency topics with conversation memory."""
         
         try:
-            # Get current market data for context
             market_context = self.get_current_market_data()
+            conversation_context = self.build_conversation_context(conversation_history)
             
-            # Create prompt for Gemini
-            prompt = f"""You are "Kryptonic," a young, super intelligent cryptocurrency expert with a Gen Z persona. Your goal is to be an informative, friendly, encouraging, and fun guide for beginners learning about crypto. You can use Gen Z slang but still sound professional and knowledgeable with a casual, friendly, conversational tone. Your responses should be easy to understand and avoid overwhelming jargon.  
-  
+            # Check if this is the first interaction
+            is_first_interaction = len([msg for msg in conversation_history if msg["role"] == "user"]) == 0
+            
+            base_prompt = f"""You are "Kryptonic," a young, super intelligent cryptocurrency expert with a Gen Z persona. Your goal is to be an informative, friendly, encouraging, and fun guide for beginners learning about crypto. You can use Gen Z slang but still sound professional and knowledgeable with a casual, friendly, conversational tone. Your responses should be easy to understand and avoid overwhelming jargon.
+
+IMPORTANT CONVERSATION RULES:
+1. {"This is the user's FIRST question - introduce yourself as Kryptonic and welcome them warmly." if is_first_interaction else "You are CONTINUING an ongoing conversation - DO NOT introduce yourself again. The user already knows who you are."}
+2. Be natural and conversational - refer to previous topics if relevant
+3. Don't repeat information you've already shared unless specifically asked
 
 PERSONALITY:
 - Be friendly, enthusiastic, and relatable
@@ -125,11 +258,10 @@ PERSONALITY:
 - Make complex topics easy to understand
 
 SPECIAL HANDLING:
-1. If someone greets you (hello, hi, hey) - respond warmly and introduce yourself as Kryptonic, their crypto buddy
-2. If someone asks "who are you", "what are you", "tell me about yourself" - explain you're Kryptonic AI, a crypto expert that helps with crypto questions, prices, and education
-3. If someone asks "what can you do", "how can you help" - list your capabilities: crypto explanations, live prices, market data, trading help, etc.
-4. For basic conversational stuff like "thanks", "goodbye" - respond appropriately but guide back to crypto
-5. If it's completely unrelated to crypto (weather, sports, etc.) - politely redirect: "Hey! I'm all about crypto stuff. What crypto question can I help with?"
+1. If someone asks "who are you", "what are you", "tell me about yourself" - explain you're Kryptonic AI, a crypto expert that helps with crypto questions, prices, and education
+2. If someone asks "what can you do", "how can you help" - list your capabilities: crypto explanations, live prices, market data, trading help, etc.
+3. For basic conversational stuff like "thanks", "goodbye" - respond appropriately but guide back to crypto
+4. If it's completely unrelated to crypto (weather, sports, etc.) - politely redirect: "Hey! I'm all about crypto stuff. What crypto question can I help with?"
 
 RULES:
 1. Focus primarily on crypto-related topics If asked respond with: "I'm so sorry, but I do not have the capabilities to answer this question. I can however assist with any and everything cryptocurrency related!
@@ -146,12 +278,15 @@ RULES:
 12. Do not encourage or give advice on illegal actions
 13. Never give personal opinions to the user
 14. Always provide factual information
+15. The final response must be in {language}.
 
 TONE EXAMPLES:
 - Instead of "utilize" say "use"
 - Instead of "substantial" say "big" or "huge"
 - Instead of "fluctuations" say "price changes"
 - Instead of "portfolio diversification" say "spreading your money around"
+
+{conversation_context}
 
 Current Market Context:
 {market_context}
@@ -160,158 +295,123 @@ User Question: {user_question}
 
 Give a helpful, friendly and professional response:"""
 
-            response = self.model.generate_content(prompt)
+            response = self.model.generate_content(base_prompt)
             
-            # Strip any remaining HTML tags from the response before returning
             clean_response = re.sub(r'<.*?>', '', response.text)
             return clean_response
             
         except Exception as e:
             return f"Oops! Something went wrong on my end 😅 Try asking again in a second: {str(e)}"
     
-    def process_query(self, user_input):
-        """Process user query and return appropriate response"""
+    def process_query(self, user_input, language, conversation_history):
+        """Process user query and return appropriate response."""
         user_input_lower = user_input.lower()
         
-        # Check for specific data requests first (these bypass AI for direct data)
+        # 1. Check for a direct answer in the CSV data first
+        csv_answer = self._find_relevant_csv_answer(user_input)
+        if csv_answer:
+            translated_response = translate_text(csv_answer, language)
+            return translated_response
+        
+        # 2. Check for price queries
         if "price" in user_input_lower and any(coin.replace('-', '').replace('2', '') in user_input_lower.replace(' ', '') for coin in self.supported_coins):
             for coin in self.supported_coins:
                 if coin.replace('-', '').replace('2', '') in user_input_lower.replace(' ', ''):
-                    return self.handle_price_query(coin)
-        
-        elif "trending" in user_input_lower or "popular" in user_input_lower:
-            return self.handle_trending_query()
-        
-        elif "market" in user_input_lower and ("overview" in user_input_lower or "top" in user_input_lower):
-            return self.handle_market_query()
-        
-        # For all other questions, let Gemini AI handle everything
-        else:
-            return self.ask_ai(user_input)
-    
-    def handle_price_query(self, coin_id):
-        """Handle price-related queries"""
-        data = self.get_crypto_price(coin_id)
-        if data and coin_id in data:
-            coin_data = data[coin_id]
-            price = coin_data['usd']
-            change_24h = coin_data.get('usd_24h_change', 0)
-            market_cap = coin_data.get('usd_market_cap', 0)
-            volume_24h = coin_data.get('usd_24h_vol', 0)
-            
-            change_emoji = "📈" if change_24h > 0 else "📉"
-            change_text = "going up" if change_24h > 0 else "going down"
-            
-            response = f"""
-{coin_id.replace('-', ' ').title()} Right Now 💰
-
+                    data = self.get_crypto_price(coin)
+                    if data and coin in data:
+                        coin_data = data[coin]
+                        price = coin_data.get('usd', 0)
+                        change_24h = coin_data.get('usd_24h_change', 0)
+                        market_cap = coin_data.get('usd_market_cap', 0)
+                        volume_24h = coin_data.get('usd_24h_vol', 0)
+                        
+                        response_str = f"""{coin.replace('-', ' ').title()} Right Now 💰
 💵 Price: ${price:,.2f}
-{change_emoji} 24h: {change_24h:+.2f}% ({change_text})
-📊 Market Size: ${market_cap:,.0f}
+{"📈" if change_24h > 0 else "📉"} 24h: {change_24h:+.2f}%
+📊 Market Cap: ${market_cap:,.0f}
 💹 Daily Trading: ${volume_24h:,.0f}
-
 Updated: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')} UTC
-
-Remember: Crypto prices change super fast! ⚡
-            """
-            return response
+Remember: Crypto prices change super fast! ⚡"""
+                        return translate_text(response_str, language)
+                    else:
+                        return translate_text(f"Hmm, couldn't grab the price for {coin} right now 🤔 Maybe try again in a bit?", language)
+        
+        # 3. Check for trending queries
+        elif "trending" in user_input_lower or "popular" in user_input_lower:
+            trending_data = self.get_trending_coins()
+            if trending_data and 'coins' in trending_data:
+                trending_coins = trending_data['coins'][:5]
+                response = "🔥 What's Hot Right Now:\n\n"
+                for i, coin in enumerate(trending_coins, 1):
+                    response += f"{i}. {coin['item']['name']} ({coin['item']['symbol'].upper()})\n"
+                    response += f"    Market Rank: #{coin['item']['market_cap_rank']}\n\n"
+                response += "These are the coins everyone's talking about today! 🚀"
+                return translate_text(response, language)
+            else:
+                return translate_text("Can't get the trending list right now 😕 Try again in a moment!", language)
+        
+        # 4. Check for market overview queries
+        elif "market" in user_input_lower and ("overview" in user_input_lower or "top" in user_input_lower):
+            return "market_overview_requested"  # Special flag for handling in main function
+        
+        # 5. Fallback to the generative model for all other questions
         else:
-            return f"Hmm, couldn't grab the price for {coin_id} right now 🤔 Maybe try again in a bit?"
-    
-    def handle_trending_query(self):
-        """Handle trending coins query"""
-        trending_data = self.get_trending_coins()
-        if trending_data:
-            trending_coins = trending_data['coins'][:5]
-            response = "🔥 What's Hot Right Now:\n\n"
-            for i, coin in enumerate(trending_coins, 1):
-                response += f"{i}. {coin['item']['name']} ({coin['item']['symbol'].upper()})\n"
-                response += f"    Market Rank: #{coin['item']['market_cap_rank']}\n\n"
-            response += "These are the coins everyone's talking about today! 🚀"
-            return response
-        else:
-            return "Can't get the trending list right now 😕 Try again in a moment!"
-    
-    def handle_market_query(self):
-        """Handle market overview query"""
-        market_data = self.get_market_overview()
-        if market_data:
-            df = pd.DataFrame(market_data)
-            df_display = df[['name', 'symbol', 'current_price', 'price_change_percentage_24h', 'market_cap']].copy()
-            df_display.columns = ['Coin', 'Symbol', 'Price', '24h Change', 'Market Cap']
-            df_display['Price'] = df_display['Price'].apply(lambda x: f"${x:,.2f}")
-            df_display['24h Change'] = df_display['24h Change'].apply(lambda x: f"{x:+.2f}%")
-            df_display['Market Cap'] = df_display['Market Cap'].apply(lambda x: f"${x:,.0f}")
-            
-            st.dataframe(df_display, use_container_width=True)
-            return "📊 Top 10 Biggest Cryptos Right Now:\n\n*These are ranked by how much they're worth in total! 💎*"
-        else:
-            return "Oops! Can't load the market data right now 📊 Give it another shot!"
+            return self.ask_ai(user_input, language, conversation_history)
 
 def get_theme_css(is_dark_mode, animations_enabled):
-    """Generate CSS based on theme and animation preferences"""
+    """Generate CSS based on theme and animation preferences."""
     
-    # Base colors for themes
     if is_dark_mode:
-        bg_gradient = """linear-gradient(135deg, 
-            #0a0a0a 0%, 
-            #1a1a2e 25%, 
-            #16213e 50%, 
-            #0f0f23 75%, 
-            #000000 100%)"""
-        primary_color = "#00ff88"
-        secondary_color = "#00d4ff"
-        accent_color = "#ff0080"
-        text_color = "#ffffff"
-        surface_color = "rgba(255, 255, 255, 0.05)"
-        border_color = "rgba(0, 255, 136, 0.3)"
-        button_text_color = "#000000"  # Black text on bright buttons in dark mode
+        bg_gradient = f"linear-gradient(135deg, {BG_GRADIENT_COLOR_1}, {BG_GRADIENT_COLOR_2}, {BG_GRADIENT_COLOR_3}, {BG_GRADIENT_COLOR_4}, {BG_GRADIENT_COLOR_5})"
+        primary_color_chat = PRIMARY_COLOR
+        secondary_color_chat = SECONDARY_COLOR
+        accent_color_chat = ACCENT_COLOR
+        text_color_chat = TEXT_COLOR
+        surface_color_chat = SURFACE_COLOR
+        border_color_chat = BORDER_COLOR
+        button_text_color_chat = "#000000"
+        sidebar_header_color = primary_color_chat
     else:
-        bg_gradient = """linear-gradient(135deg, 
-            #f8fafc 0%, 
-            #e2e8f0 25%, 
-            #cbd5e1 50%, 
-            #94a3b8 75%, 
-            #64748b 100%)"""
-        primary_color = "#059669"
-        secondary_color = "#0284c7"
-        accent_color = "#dc2626"
-        text_color = "#000000"  # Black text for light mode
-        surface_color = "rgba(255, 255, 255, 0.8)"
-        border_color = "rgba(5, 150, 105, 0.3)"
-        button_text_color = "#ffffff"  # White text on colored buttons in light mode
+        bg_gradient = "linear-gradient(135deg, #f0f2f6, #e9eef2)"
+        primary_color_chat = "#059669"
+        secondary_color_chat = "#0284c7"
+        accent_color_chat = "#dc2626"
+        text_color_chat = "#000000"
+        surface_color_chat = "rgba(255, 255, 255, 0.9)"
+        border_color_chat = "rgba(5, 150, 105, 0.5)"
+        button_text_color_chat = "#ffffff"
+        sidebar_header_color = text_color_chat
     
-    # Animation styles (conditional)
     animation_css = ""
     if animations_enabled:
         animation_css = """
-        /* Animations */
         @keyframes gradientShift {
             0% { background-position: 0% 50%; }
             50% { background-position: 100% 50%; }
             100% { background-position: 0% 50%; }
         }
-        
         @keyframes borderGlow {
             0%, 100% { background-position: 0% 50%; }
             50% { background-position: 100% 50%; }
         }
-        
         @keyframes dataPulse {
             0%, 100% { opacity: 1; transform: scale(1); }
             50% { opacity: 0.3; transform: scale(0.8); }
         }
-        
         @keyframes cursorBlink {
             0%, 50% { opacity: 1; }
             51%, 100% { opacity: 0; }
         }
-        
         @keyframes pulse {
-            0%, 100% { opacity: 1; }
-            50% { opacity: 0.7; }
+            0%, 100% { transform: scale(1); opacity: 0.3; }
+            50% { transform: scale(1.2); opacity: 0.5; }
         }
-        
+        @keyframes float {
+            0%, 100% { transform: translateY(0px) translateX(0px); }
+            25% { transform: translateY(-15px) translateX(5px); }
+            50% { transform: translateY(-5px) translateX(-5px); }
+            75% { transform: translateY(-20px) translateX(8px); }
+        }
         @keyframes glitchEffect {
             0% { transform: translateX(0); }
             20% { transform: translateX(-2px); }
@@ -320,480 +420,425 @@ def get_theme_css(is_dark_mode, animations_enabled):
             80% { transform: translateX(1px); }
             100% { transform: translateX(0); }
         }
-        
-        /* Apply animations */
-        .main-header {
-            animation: gradientShift 3s ease infinite;
-        }
-        
-        .ai-message::before {
-            animation: borderGlow 2s ease-in-out infinite;
-        }
-        
-        .ai-message .data-stream {
-            animation: dataPulse 1.5s ease-in-out infinite;
-        }
-        
-        .ai-message .data-stream::before {
-            animation: dataPulse 1.8s ease-in-out infinite;
-        }
-        
-        .ai-message .data-stream::after {
-            animation: dataPulse 2.1s ease-in-out infinite;
-        }
-        
-        .user-message .terminal-cursor {
-            animation: cursorBlink 1s infinite;
-        }
-        
-        .glow-text {
-            animation: pulse 2s infinite;
-        }
-        
-        .user-message:hover {
-            animation: glitchEffect 0.3s ease-in-out;
-        }
+        .main-header { animation: gradientShift 3s ease infinite; }
+        .ai-message::before { animation: borderGlow 2s ease-in-out infinite; }
+        .ai-message .data-stream { animation: dataPulse 1.5s ease-in-out infinite; }
+        .ai-message .data-stream::before { animation: dataPulse 1.8s ease-in-out infinite; }
+        .ai-message .data-stream::after { animation: dataPulse 2.1s ease-in-out infinite; }
+        .user-message .terminal-cursor { animation: cursorBlink 1s infinite; }
+        .glow-text { animation: pulse 2s infinite; }
+        .user-message:hover { animation: glitchEffect 0.3s ease-in-out; }
+        .glow-orb { animation: pulse 4s ease-in-out infinite; }
+        .crystal-placeholder { animation: float 8s ease-in-out infinite; }
         """
     else:
-        # Static versions without animations
         animation_css = """
-        /* Static styles (no animations) */
-        .main-header {
-            animation: none;
-        }
-        
-        .ai-message::before {
-            animation: none;
-        }
-        
-        .ai-message .data-stream {
-            animation: none;
-        }
-        
-        .ai-message .data-stream::before {
-            animation: none;
-        }
-        
-        .ai-message .data-stream::after {
-            animation: none;
-        }
-        
-        .user-message .terminal-cursor {
-            animation: none;
-        }
-        
-        .glow-text {
-            animation: none;
-        }
-        
-        .user-message:hover {
-            animation: none;
-        }
+        .main-header { animation: none; }
+        .ai-message::before { animation: none; }
+        .ai-message .data-stream { animation: none; }
+        .ai-message .data-stream::before { animation: none; }
+        .ai-message .data-stream::after { animation: none; }
+        .user-message .terminal-cursor { animation: none; }
+        .glow-text { animation: none; }
+        .user-message:hover { animation: none; }
+        .glow-orb { animation: none; }
+        .crystal-placeholder { animation: none; }
         """
     
     return f"""
     <style>
-    /* Import cyber fonts */
     @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Rajdhani:wght@300;400;600;700&display=swap');
-    
-    /* Main app styling */
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
+
+    body {{
+        font-family: 'Inter', sans-serif;
+        background: {bg_gradient};
+        color: {TEXT_COLOR};
+        overflow-x: hidden;
+        min-height: 100vh;
+        position: relative;
+    }}
     .stApp {{
         background: {bg_gradient};
-        color: {text_color};
+        color: {TEXT_COLOR};
+        font-family: 'Inter', sans-serif;
     }}
-    
-    /* Header styling */
-    .main-header {{
-        text-align: center;
-        padding: 2rem 0;
-        background: linear-gradient(90deg, {primary_color}, {secondary_color}, {accent_color}, {primary_color});
-        background-size: 300% 300%;
-        -webkit-background-clip: text;
-        -webkit-text-fill-color: transparent;
-        background-clip: text;
-        font-family: 'Orbitron', monospace;
-        font-weight: 900;
-        font-size: 3.5rem;
-        text-shadow: 0 0 30px rgba(0, 255, 136, 0.5);
-        margin-bottom: 1rem;
+    .main .block-container {{
+        padding-top: 1.5rem;
+        padding-bottom: 2rem;
+        padding-left: 3rem;
+        padding-right: 3rem;
+        max-width: 1200px;
+        margin: 0 auto;
     }}
-    
-    .sub-header {{
-        text-align: center;
-        color: {text_color};
-        opacity: 0.7;
-        font-family: 'Rajdhani', sans-serif;
-        font-size: 1.2rem;
-        margin-bottom: 2rem;
-        padding: 0 2rem;
-    }}
-    
-    /* Button styling */
-    .stButton > button {{
-        background: linear-gradient(45deg, {primary_color}, {secondary_color});
-        color: {button_text_color};
-        border: none;
-        border-radius: 8px;
-        font-family: 'Rajdhani', sans-serif;
-        font-weight: 600;
-        font-size: 1rem;
-        padding: 0.7rem 1.5rem;
-        transition: all 0.3s ease;
-        box-shadow: 0 4px 15px {border_color};
-        text-transform: uppercase;
-        letter-spacing: 1px;
-    }}
-    
-    .stButton > button:hover {{
-        background: linear-gradient(45deg, {accent_color}, {primary_color});
-        transform: translateY(-2px);
-        box-shadow: 0 6px 20px rgba(255, 0, 128, 0.4);
-    }}
-    
-    /* Sidebar styling */
-    .stSidebar {{
-        background: {surface_color};
-        backdrop-filter: blur(10px);
-    }}
-    
-    /* Sidebar headers */
-    .sidebar-header {{
-        color: {primary_color};
-        font-family: 'Orbitron', monospace;
-        font-weight: 700;
-        font-size: 1.3rem;
-        text-align: center;
-        margin-bottom: 1rem;
-        text-shadow: 0 0 10px rgba(0, 255, 136, 0.5);
-    }}
-    
-    /* Feature list styling */
-    .feature-list {{
-        background: {surface_color};
-        border-left: 3px solid {primary_color};
-        padding: 1rem;
-        margin: 1rem 0;
-        border-radius: 0 8px 8px 0;
-        font-family: 'Rajdhani', sans-serif;
-        color: {text_color};
-    }}
-    
-    /* Status indicators */
-    .status-success {{
-        color: {primary_color};
-        background: {surface_color};
-        padding: 0.5rem 1rem;
-        border-radius: 6px;
-        border-left: 4px solid {primary_color};
-        font-family: 'Rajdhani', sans-serif;
-        font-weight: 600;
-    }}
-    
-    .status-error {{
-        color: {accent_color};
-        background: {surface_color};
-        padding: 0.5rem 1rem;
-        border-radius: 6px;
-        border-left: 4px solid {accent_color};
-        font-family: 'Rajdhani', sans-serif;
-        font-weight: 600;
-    }}
-    
-    /* Custom Chat Styling */
-    .stChatMessage {{
-        background: transparent !important;
-        border: none !important;
-        padding: 0 !important;
-        margin: 1rem 0 !important;
-    }}
-    
-    /* Hide default chat avatars */
-    .stChatMessage > div:first-child {{
-        display: none !important;
-    }}
-    
-    /* User Message Styling - Terminal Input Style */
-    .user-message {{
-        background: linear-gradient(90deg, {surface_color}, rgba(0, 212, 255, 0.05));
-        border-left: 4px solid {primary_color};
-        border-radius: 0 12px 12px 0;
-        padding: 1rem 1.5rem;
-        margin: 1rem 0;
+    .header-container {{
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 1.5rem 0;
         position: relative;
-        font-family: 'Rajdhani', monospace;
-        box-shadow: 0 0 20px {border_color};
-        backdrop-filter: blur(5px);
-        color: {text_color};
+        z-index: 20;
     }}
-    
-    .user-message::before {{
-        content: ">";
-        position: absolute;
-        left: -2px;
-        top: 50%;
-        transform: translateY(-50%);
-        background: {primary_color};
-        color: {button_text_color};
-        width: 20px;
-        height: 20px;
-        border-radius: 50%;
+    .logo-section {{
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+    }}
+    .logo-shield {{
+        width: 45px;
+        height: 45px;
+        background: linear-gradient(135deg, #4338ca, #7c3aed, {PRIMARY_COLOR});
+        clip-path: polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%);
         display: flex;
         align-items: center;
         justify-content: center;
-        font-weight: bold;
-        font-size: 12px;
-        box-shadow: 0 0 10px rgba(0, 255, 136, 0.5);
-    }}
-    
-    .user-message::after {{
-        content: "";
-        position: absolute;
-        right: -1px;
-        top: 0;
-        bottom: 0;
-        width: 2px;
-        background: linear-gradient(180deg, {primary_color}, transparent);
-    }}
-    
-    /* AI Message Styling - Holographic Panel */
-    .ai-message {{
-        background: linear-gradient(135deg, 
-            rgba(0, 212, 255, 0.1) 0%,
-            rgba(255, 0, 128, 0.1) 50%,
-            rgba(0, 255, 136, 0.05) 100%);
-        border: 1px solid {border_color};
-        border-radius: 15px;
-        padding: 1.5rem;
-        margin: 1rem 0;
         position: relative;
-        backdrop-filter: blur(10px);
-        box-shadow: 0 8px 32px {border_color};
-        overflow: hidden;
-        color: {text_color};
     }}
+    .logo-shield::before {{
+        content: '⚔';
+        font-size: 18px;
+        position: absolute;
+    }}
+    .logo-text {{
+        font-size: 1.4rem;
+        font-weight: 800;
+        letter-spacing: 1px;
+        color: {TEXT_COLOR};
+    }}
+    .nav-links-container {{
+        display: flex;
+        align-items: center;
+        gap: 2.5rem;
+    }}
+    .stars-text {{
+        color: {STARS_COLOR};
+        font-size: 0.9rem;
+        letter-spacing: 2px;
+        white-space: nowrap;
+    }}
+    .main-content {{
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        text-align: center;
+        padding: 2rem;
+        position: relative;
+        z-index: 10;
+        max-width: 1000px;
+        margin: 0 auto;
+        min-height: calc(100vh - 120px);
+    }}
+    .hero-title {{
+        font-family: 'Inter', sans-serif;
+        font-size: clamp(2.8rem, 7vw, 5.5rem);
+        font-weight: 700;
+        line-height: 1.1;
+        margin-bottom: 3rem;
+        letter-spacing: -0.02em;
+        color: {TEXT_COLOR};
+    }}
+    .hero-title .highlight {{
+        background: linear-gradient(135deg, {HIGHLIGHT_GRADIENT_START} 0%, {HIGHLIGHT_GRADIENT_MIDDLE} 50%, {HIGHLIGHT_GRADIENT_END} 100%);
+        background-size: 200% 200%;
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+        animation: gradientShift 4s ease-in-out infinite;
+    }}
+    .glow-orb {{
+        position: absolute;
+        border-radius: 50%;
+        filter: blur(40px);
+        opacity: 0.3;
+        pointer-events: none;
+        animation: pulse 4s ease-in-out infinite;
+    }}
+    .glow-1 {{ top: 20%; left: 10%; width: 200px; height: 200px; background: radial-gradient(circle, {HIGHLIGHT_GRADIENT_START} 0%, transparent 70%); animation-delay: -1s; }}
+    .glow-2 {{ bottom: 30%; right: 15%; width: 150px; height: 150px; background: radial-gradient(circle, {HIGHLIGHT_GRADIENT_MIDDLE} 0%, transparent 70%); animation-delay: -2s; }}
+    .glow-3 {{ top: 60%; left: 20%; width: 180px; height: 180px; background: radial-gradient(circle, {HIGHLIGHT_GRADIENT_END} 0%, transparent 70%); animation-delay: -3s; }}
+    .crystal-placeholder {{
+        position: absolute;
+        background: linear-gradient(135deg, rgba(139, 92, 246, 0.8), rgba(59, 130, 246, 0.9), rgba(236, 72, 153, 0.8));
+        backdrop-filter: blur(5px);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        opacity: 0.6;
+        pointer-events: none;
+        z-index: 5;
+        animation: float 8s ease-in-out infinite;
+    }}
+    .crystal-diamond-p {{ top: 15%; left: 15%; width: 120px; height: 120px; clip-path: polygon(50% 0%, 100% 50%, 50% 100%, 0% 50%); animation-delay: -2s; }}
+    .crystal-octagon-p {{ top: 25%; right: 12%; width: 100px; height: 100px; clip-path: polygon(30% 0%, 70% 0%, 100% 30%, 100% 70%, 70% 100%, 30% 100%, 0% 70%, 0% 30%); animation-delay: -4s; }}
+    .crystal-sphere-p {{ bottom: 25%; right: 15%; width: 80px; height: 80px; border-radius: 50%; animation-delay: -1s; }}
+    .crystal-ring-p {{ bottom: 20%; left: 8%; width: 150px; height: 150px; border-radius: 50%; border: 20px solid transparent; background-clip: padding-box; background: conic-gradient(from 0deg, rgba(139, 92, 246, 0.6) 0deg, rgba(59, 130, 246, 0.8) 120deg, rgba(236, 72, 153, 0.6) 240deg, rgba(139, 92, 246, 0.6) 360deg); animation-delay: -3s; }}
+    .crystal-cube-p {{ top: 45%; left: 3%; width: 70px; height: 70px; animation-delay: -5s; }}
+    .crystal-triangle-p {{ top: 55%; right: 8%; width: 90px; height: 90px; clip-path: polygon(50% 0%, 0% 100%, 100% 100%); animation-delay: -6s; }}
     
+    /* Chatbot specific styling */
+    .chat-header {{
+        text-align: center; padding: 2rem 0;
+        background: linear-gradient(90deg, {PRIMARY_COLOR}, {SECONDARY_COLOR}, {ACCENT_COLOR}, {PRIMARY_COLOR});
+        background-size: 300% 300%; -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+        background-clip: text; font-family: 'Orbitron', monospace; font-weight: 900; font-size: 3.5rem;
+        text-shadow: 0 0 30px rgba(5, 150, 105, 0.5); margin-bottom: 1rem;
+    }}
+    .sub-header {{
+        text-align: center; color: {TEXT_COLOR}; opacity: 0.7;
+        font-family: 'Rajdhani', sans-serif; font-size: 1.2rem;
+        margin-bottom: 2rem; padding: 0 2rem;
+    }}
+    .stSidebar {{ background: {SURFACE_COLOR}; backdrop-filter: blur(10px); }}
+    .sidebar-header {{
+        color: {sidebar_header_color}; font-family: 'Orbitron', monospace;
+        font-weight: 700; font-size: 1.3rem; text-align: center;
+        margin-bottom: 1rem; text-shadow: 0 0 10px rgba(5, 150, 105, 0.5);
+    }}
+    .feature-list {{
+        background: {SURFACE_COLOR}; border-left: 3px solid {PRIMARY_COLOR};
+        padding: 1rem; margin: 1rem 0; border-radius: 0 8px 8px 0;
+        font-family: 'Rajdhani', sans-serif; color: {TEXT_COLOR};
+    }}
+    .status-success {{
+        color: {PRIMARY_COLOR}; background: {SURFACE_COLOR}; padding: 0.5rem 1rem;
+        border-radius: 6px; border-left: 4px solid {PRIMARY_COLOR};
+        font-family: 'Rajdhani', sans-serif; font-weight: 600;
+    }}
+    .status-error {{
+        color: {ACCENT_COLOR}; background: {SURFACE_COLOR}; padding: 0.5rem 1rem;
+        border-radius: 6px; border-left: 4px solid {ACCENT_COLOR};
+        font-family: 'Rajdhani', sans-serif; font-weight: 600;
+    }}
+    .stChatMessage {{ background: transparent !important; border: none !important; padding: 0 !important; margin: 1rem 0 !important; }}
+    .stChatMessage > div:first-child {{ display: none !important; }}
+    .user-message {{
+        background: {surface_color_chat};
+        border-left: 4px solid {primary_color_chat}; border-radius: 0 12px 12px 0;
+        padding: 1rem 1.5rem; margin: 1rem 0; position: relative;
+        font-family: 'Rajdhani', monospace; box-shadow: 0 0 20px {border_color_chat};
+        backdrop-filter: blur(5px); color: {text_color_chat};
+    }}
+    .user-message::before {{
+        content: ">"; position: absolute; left: -2px; top: 50%; transform: translateY(-50%);
+        background: {primary_color_chat}; color: {button_text_color_chat}; width: 20px;
+        height: 20px; border-radius: 50%; display: flex; align-items: center;
+        justify-content: center; font-weight: bold; font-size: 12px;
+        box-shadow: 0 0 10px rgba(5, 150, 105, 0.5);
+    }}
+    .user-message::after {{
+        content: ""; position: absolute; right: -1px; top: 0; bottom: 0;
+        width: 2px; background: linear-gradient(180deg, {primary_color_chat}, transparent);
+    }}
+    .ai-message {{
+        background: {surface_color_chat};
+        border: 1px solid {border_color_chat}; border-radius: 15px;
+        padding: 1.5rem; margin: 1rem 0; position: relative;
+        backdrop-filter: blur(10px); box-shadow: 0 8px 32px {border_color_chat};
+        overflow: hidden; color: {text_color_chat};
+    }}
     .ai-message::before {{
-        content: "";
-        position: absolute;
-        top: -2px;
-        left: -2px;
-        right: -2px;
-        bottom: -2px;
-        background: linear-gradient(45deg, {secondary_color}, {accent_color}, {primary_color}, {secondary_color});
-        background-size: 300% 300%;
-        border-radius: 15px;
-        z-index: -1;
-        opacity: 0.5;
+        content: ""; position: absolute; top: -2px; left: -2px; right: -2px; bottom: -2px;
+        background: linear-gradient(45deg, {secondary_color_chat}, {accent_color_chat}, {primary_color_chat}, {secondary_color_chat});
+        background-size: 300% 300%; border-radius: 15px; z-index: -1; opacity: 0.5;
     }}
-    
     .ai-message::after {{
-        content: "◇ KRYPTONIC AI";
-        position: absolute;
-        top: -8px;
-        left: 20px;
-        background: linear-gradient(90deg, {secondary_color}, {accent_color});
-        color: {button_text_color};
-        padding: 2px 8px;
-        font-size: 10px;
-        font-weight: bold;
-        border-radius: 4px;
-        font-family: 'Orbitron', monospace;
+        content: "◇ KRYPTONIC AI"; position: absolute; top: -8px; left: 20px;
+        background: linear-gradient(90deg, {secondary_color_chat}, {accent_color_chat});
+        color: {button_text_color_chat}; padding: 2px 8px; font-size: 10px;
+        font-weight: bold; border-radius: 4px; font-family: 'Orbitron', monospace;
         letter-spacing: 1px;
     }}
-    
-    /* Data stream effect for AI messages */
     .ai-message .data-stream {{
-        position: absolute;
-        right: 10px;
-        top: 10px;
-        width: 8px;
-        height: 8px;
-        background: {primary_color};
-        border-radius: 50%;
-        box-shadow: 0 0 10px {primary_color};
+        position: absolute; right: 10px; top: 10px; width: 8px; height: 8px;
+        background: {primary_color_chat}; border-radius: 50%; box-shadow: 0 0 10px {primary_color_chat};
     }}
-    
     .ai-message .data-stream::before {{
-        content: "";
-        position: absolute;
-        right: 15px;
-        top: 0;
-        width: 6px;
-        height: 6px;
-        background: {secondary_color};
-        border-radius: 50%;
-        box-shadow: 0 0 8px {secondary_color};
+        content: ""; position: absolute; right: 15px; top: 0; width: 6px; height: 6px;
+        background: {secondary_color_chat}; border-radius: 50%; box-shadow: 0 0 8px {secondary_color_chat};
     }}
-    
     .ai-message .data-stream::after {{
-        content: "";
-        position: absolute;
-        right: 25px;
-        top: 1px;
-        width: 4px;
-        height: 4px;
-        background: {accent_color};
-        border-radius: 50%;
-        box-shadow: 0 0 6px {accent_color};
+        content: ""; position: absolute; right: 25px; top: 1px; width: 4px; height: 4px;
+        background: {accent_color_chat}; border-radius: 50%; box-shadow: 0 0 6px {accent_color_chat};
     }}
-    
-    /* Terminal cursor effect for user input */
     .user-message .terminal-cursor {{
-        display: inline-block;
-        width: 2px;
-        height: 1.2em;
-        background: {primary_color};
-        margin-left: 2px;
+        display: inline-block; width: 2px; height: 1.2em;
+        background: {primary_color_chat}; margin-left: 2px;
     }}
-    
-    /* Glowing effects */
-    .glow-text {{
-        text-shadow: 0 0 10px currentColor;
+    .glow-text {{ text-shadow: 0 0 10px currentColor; }}
+    .ai-message:hover {{ transform: translateY(-2px); box-shadow: 0 12px 40px {border_color_chat}; transition: all 0.3s ease; }}
+    .stToggle > div {{ background: {surface_color_chat} !important; border: 1px solid {border_color_chat} !important; }}
+    .stDataFrame {{ background: {surface_color_chat}; border-radius: 10px; border: 1px solid {border_color_chat}; }}
+    .stButton > button {{
+        background: linear-gradient(45deg, {primary_color_chat}, {secondary_color_chat});
+        color: {button_text_color_chat}; border: none; border-radius: 8px;
+        font-family: 'Rajdhani', sans-serif; font-weight: 600; font-size: 1rem;
+        padding: 0.7rem 1.5rem; transition: all 0.3s ease;
+        box-shadow: 0 4px 15px {border_color_chat}; text-transform: uppercase; letter-spacing: 1px;
     }}
-    
-    /* Hologram effect for AI messages */
-    .ai-message:hover {{
-        transform: translateY(-2px);
-        box-shadow: 0 12px 40px {border_color};
-        transition: all 0.3s ease;
+    .stButton > button:hover {{
+        background: linear-gradient(45deg, {accent_color_chat}, {primary_color_chat});
+        transform: translateY(-2px); box-shadow: 0 6px 20px rgba(255, 0, 128, 0.4);
     }}
-    
-    /* Toggle switches styling */
-    .stToggle > div {{
-        background: {surface_color} !important;
-        border: 1px solid {border_color} !important;
+
+    /* Responsive design */
+    @media (max-width: 768px) {{
+        .main .block-container {{ padding-left: 1.5rem; padding-right: 1.5rem; }}
+        .header-container {{ flex-direction: column; gap: 1rem; }}
+        .nav-links-container {{ gap: 1.5rem; }}
+        .hero-title {{ font-size: 3rem; margin-bottom: 2rem; }}
+        .crystal-placeholder, .glow-orb {{ transform: scale(0.7); }}
     }}
-    
-    /* Dataframe styling */
-    .stDataFrame {{
-        background: {surface_color};
-        border-radius: 10px;
-        border: 1px solid {border_color};
+    @media (max-width: 480px) {{
+        .main .block-container {{ padding-left: 1rem; padding-right: 1rem; }}
+        .logo-text {{ font-size: 1.2rem; }}
+        .nav-links-container {{ flex-wrap: wrap; justify-content: center; gap: 1rem; }}
+        .hero-title {{ font-size: 2.2rem; }}
+        .crystal-placeholder, .glow-orb {{ display: none; }}
     }}
     
     {animation_css}
-    
     </style>
     """
 
-def main():
-    # Initialize session state for theme and animations
-    if 'dark_mode' not in st.session_state:
-        st.session_state.dark_mode = True
-    if 'animations_enabled' not in st.session_state:
-        st.session_state.animations_enabled = True
-    
-    # Apply theme CSS
-    st.markdown(get_theme_css(st.session_state.dark_mode, st.session_state.animations_enabled), unsafe_allow_html=True)
-    
-    # Custom header with crypto styling
-    col1, col2, col3 = st.columns([1, 2, 1])
-            
-    with col2:
-        st.markdown("""
-        <div class="main-header">
-            🚀 Kryptonic AI 🤖
+
+def welcome_page():
+    # --- Ambient Glow Effects ---
+    st.markdown(f'<div class="glow-orb glow-1"></div>', unsafe_allow_html=True)
+    st.markdown(f'<div class="glow-orb glow-2"></div>', unsafe_allow_html=True)
+    st.markdown(f'<div class="glow-orb glow-3"></div>', unsafe_allow_html=True)
+
+    # --- Crystal Shapes ---
+    st.markdown(f'<div class="crystal-placeholder crystal-diamond-p"></div>', unsafe_allow_html=True)
+    st.markdown(f'<div class="crystal-placeholder crystal-octagon-p"></div>', unsafe_allow_html=True)
+    st.markdown(f'<div class="crystal-placeholder crystal-sphere-p"></div>', unsafe_allow_html=True)
+    st.markdown(f'<div class="crystal-placeholder crystal-ring-p"></div>', unsafe_allow_html=True)
+    st.markdown(f'<div class="crystal-placeholder crystal-cube-p"></div>', unsafe_allow_html=True)
+    st.markdown(f'<div class="crystal-placeholder crystal-triangle-p"></div>', unsafe_allow_html=True)
+
+    # --- Header Section ---
+    header_cols = st.columns([1, 2, 1])
+
+    with header_cols[0]:
+        st.markdown(
+            """
+            <div class="logo-section">
+                <div class="logo-shield"></div>
+                <div class="logo-text">CRYPTO KNIGHT</div>
+            </div>
+            """,
+            unsafe_allow_html=True
+        )
+
+    with header_cols[1]:
+        nav_cols = st.columns([1, 1, 1])
+        with nav_cols[0]:
+            if st.button("LOG IN", key="nav_login"):
+                st.session_state.page = "login"
+        with nav_cols[1]:
+            st.markdown(f'<span class="stars-text">★★★★★</span>', unsafe_allow_html=True)
+        with nav_cols[2]:
+            if st.button("ABOUT", key="nav_about"):
+                st.session_state.page = "about"
+
+    with header_cols[2]:
+        if st.button("Sign up →", key="signup_button"):
+            st.session_state.page = "signup"
+
+    # --- Main Content (Hero Section) ---
+    st.markdown(
+        f"""
+        <div class="main-content">
+            <h1 class="hero-title">
+                Welcome to <span class="highlight">Crypto Knight</span>,<br>
+                Your crypto guide, where<br>
+                <span class="highlight">futures collide</span>
+            </h1>
         </div>
-        <div class="sub-header">
-            ⚡ Your Crypto Buddy That Actually Gets It ⚡<br>
-            <span style="color: #00ff88;">🔮 Smart AI • Live Prices • Easy Explanations 🔮</span>
-        </div>
-        """, unsafe_allow_html=True)
-    
-    # Check if API key is configured
-    if GEMINI_API_KEY == "YOUR_GEMINI_API_KEY_HERE":
-        st.markdown("""
-        <div class="status-error">
-        ❌ <strong>OOPS! NEED TO SET UP API</strong><br>
-        Need your Google AI key to get this working
-        </div>
-        """, unsafe_allow_html=True)
-        
-        st.markdown("""
-        <div class="feature-list">
-        <strong>🔑 Quick Setup:</strong><br>
-        1. Go to → https://makersuite.google.com/app/apikey<br>
-        2. Sign in with Google<br>
-        3. Create a new API key<br>
-        4. Put it in the code where it says "YOUR_GEMINI_API_KEY_HERE"<br>
-        5. You're good to go! 🚀
-        </div>
-        """, unsafe_allow_html=True)
-        return
-    
-    # Sidebar with quick actions and controls
+        """,
+        unsafe_allow_html=True
+    )
+
+    # --- Start a chat button ---
+    st.markdown("<div style='text-align: center;'>", unsafe_allow_html=True)
+    if st.button("Start a chat", key="get_started_btn"):
+        st.session_state.page = "chatbot"
+        st.rerun()
+    st.markdown("</div>", unsafe_allow_html=True)
+
+
+def chatbot_page():
+    # --- Custom Header with crypto styling ---
+    st.markdown("""
+    <div style='text-align: center;'>
+    <h1 class="chat-header">
+        🚀 Kryptonic AI 🤖
+    </h1>
+    <div class="sub-header">
+        ⚡ Your Crypto Buddy That Actually Gets It ⚡<br>
+        <span style="color: #059669;">🔮 Smart AI • Live Prices • Easy Explanations 🔮</span>
+    </div>
+    </div>
+    """, unsafe_allow_html=True)
+
+    # --- Sidebar with quick actions and controls ---
     with st.sidebar:
         st.markdown('<div class="sidebar-header">⚙ CONTROLS ⚙</div>', unsafe_allow_html=True)
         
-        # Theme and animation controls
         col1, col2 = st.columns(2)
         with col1:
             dark_mode = st.toggle("🌙 Dark Mode", value=st.session_state.dark_mode, key="dark_toggle")
         with col2:
             animations = st.toggle("✨ Animations", value=st.session_state.animations_enabled, key="anim_toggle")
         
-        # Update session state and rerun if changed
         if dark_mode != st.session_state.dark_mode:
             st.session_state.dark_mode = dark_mode
             st.rerun()
-        
         if animations != st.session_state.animations_enabled:
             st.session_state.animations_enabled = animations
             st.rerun()
+
+        st.markdown("---")
+        st.markdown('<div class="sidebar-header">🌐 LANGUAGE 🌐</div>', unsafe_allow_html=True)
         
+        lang_options = {'English': 'en', 'Spanish': 'es', 'French': 'fr'}
+        current_lang_name = next((name for name, code in lang_options.items() if code == st.session_state.selected_lang_code), 'English')
+        default_index = list(lang_options.keys()).index(current_lang_name)
+        selected_lang_name = st.selectbox(
+            "Select Response Language",
+            list(lang_options.keys()),
+            index=default_index
+        )
+        st.session_state.selected_lang_code = lang_options[selected_lang_name]
+
         st.markdown("---")
         st.markdown('<div class="sidebar-header">⚡ QUICK STUFF ⚡</div>', unsafe_allow_html=True)
         
-        # Initialize chatbot
-        if 'chatbot' not in st.session_state:
-            try:
-                st.session_state.chatbot = CryptoChatbot(GEMINI_API_KEY)
-                st.markdown("""
-                <div class="status-success glow-text">
-                ✅ CryptoMind AI: Ready!<br>
-                🧠 AI brain loaded<br>
-                🔗 Connected to crypto data
-                </div>
-                """, unsafe_allow_html=True)
-            except Exception as e:
-                st.markdown(f"""
-                <div class="status-error">
-                ❌ <strong>UH OH!</strong><br>
-                Something's not working: {str(e)}<br><br>
-                <strong>Try This:</strong><br>
-                • Check your internet<br>
-                • Make sure the API key is right<br>
-                • Refresh the page
-                </div>
-                """, unsafe_allow_html=True)
-                return
-        
-        st.markdown("---")
-        
-        # Quick action buttons with crypto styling
         col1, col2 = st.columns(2)
         
         with col1:
             if st.button("🔥 TRENDING"):
-                response = st.session_state.chatbot.handle_trending_query()
-                if 'messages' not in st.session_state:
-                    st.session_state.messages = []
+                response = st.session_state.chatbot.process_query("what are the trending coins?", st.session_state.selected_lang_code, st.session_state.messages)
                 st.session_state.messages.append({"role": "assistant", "content": response})
                 st.rerun()
             
             if st.button("💰 BTC PRICE"):
-                response = st.session_state.chatbot.handle_price_query("bitcoin")
-                if 'messages' not in st.session_state:
-                    st.session_state.messages = []
+                response = st.session_state.chatbot.process_query("What is the price of Bitcoin?", st.session_state.selected_lang_code, st.session_state.messages)
                 st.session_state.messages.append({"role": "assistant", "content": response})
                 st.rerun()
         
         with col2:
             if st.button("📊 TOP COINS"):
-                response = st.session_state.chatbot.handle_market_query()
-                if 'messages' not in st.session_state:
-                    st.session_state.messages = []
-                st.session_state.messages.append({"role": "assistant", "content": response})
+                # Handle market overview properly
+                message_text = "📊 Top 10 Biggest Cryptos Right Now:\n\n*These are ranked by how much they're worth in total! 💎*"
+                translated_message = translate_text(message_text, st.session_state.selected_lang_code)
+                
+                df = st.session_state.chatbot.get_market_overview_df()
+                
+                if not df.empty:
+                    st.session_state.messages.append({"role": "assistant", "content": translated_message, "type": "text"})
+                    st.session_state.messages.append({"role": "assistant", "content": df, "type": "dataframe"})
+                else:
+                    st.session_state.messages.append({"role": "assistant", "content": translate_text("Oops! Can't load the market data right now 📊 Give it another shot!", st.session_state.selected_lang_code), "type": "text"})
+                
                 st.rerun()
             
             if st.button("🔄 CLEAR CHAT"):
@@ -802,7 +847,6 @@ def main():
         
         st.markdown("---")
         
-        # Features section with crypto styling
         st.markdown("""
         <div class="feature-list">
         <div class="sidebar-header">🛡 WHAT I CAN DO</div>
@@ -824,60 +868,133 @@ def main():
         </div>
         """, unsafe_allow_html=True)
     
-    # Initialize chatbot
-    if 'chatbot' not in st.session_state:
-        try:
-            st.session_state.chatbot = CryptoChatbot(GEMINI_API_KEY)
-        except Exception as e:
-            st.markdown(f"""
-            <div class="status-error">
-            ❌ <strong>SOMETHING WENT WRONG</strong><br>
-            Error: {str(e)}<br><br>
-            <strong>Quick Fixes:</strong><br>
-            • Check your API key<br>
-            • Make sure you're online<br>
-            • Try refreshing
-            </div>
-            """, unsafe_allow_html=True)
-            return
-    
-    # Initialize chat history
-    if "messages" not in st.session_state:
-        st.session_state.messages = []
-    
     # Display chat messages with custom styling
     for message in st.session_state.messages:
         if message["role"] == "user":
-            # Custom user message with terminal styling
             st.markdown(f"""
             <div class="user-message">
                 <strong style="color: #00ff88; font-family: 'Orbitron', monospace;">USER_INPUT:</strong> {message["content"]}
                 <div class="terminal-cursor"></div>
             </div>
             """, unsafe_allow_html=True)
-        else:
-            # Custom AI message with holographic styling
-            st.markdown(f"""
-            <div class="ai-message">
-                <div class="data-stream"></div>
-                {message["content"]}
-            </div>
-            """, unsafe_allow_html=True)
+        else: # role == "assistant"
+            if message.get("type") == "dataframe":
+                st.dataframe(message["content"], use_container_width=True)
+            else:
+                st.markdown(f"""
+                <div class="ai-message">
+                    <div class="data-stream"></div>
+                    {message["content"]}
+                </div>
+                """, unsafe_allow_html=True)
     
     # Chat input with enhanced styling
     if prompt := st.chat_input("🤑Ask me anything about crypto..."):
-        # Add user message to chat history
         st.session_state.messages.append({"role": "user", "content": prompt})
         
-        # Generate and display assistant response
-        with st.spinner("🧠 Thinking about your question..."):
-            response = st.session_state.chatbot.process_query(prompt)
-            
-            # Add assistant response to chat history
-            st.session_state.messages.append({"role": "assistant", "content": response})
+        # Display the user's message
+        st.markdown(f"""
+        <div class="user-message">
+            <strong style="color: #00ff88; font-family: 'Orbitron', monospace;">USER_INPUT:</strong> {prompt}
+            <div class="terminal-cursor"></div>
+        </div>
+        """, unsafe_allow_html=True)
         
-        # Rerun to show new messages with custom styling
+        with st.spinner("🧠 Thinking about your question..."):
+            # Pass the conversation history to process_query
+            response = st.session_state.chatbot.process_query(prompt, st.session_state.selected_lang_code, st.session_state.messages)
+            
+            # Handle special case for market overview
+            if response == "market_overview_requested":
+                message_text = "📊 Top 10 Biggest Cryptos Right Now:\n\n*These are ranked by how much they're worth in total! 💎*"
+                translated_message = translate_text(message_text, st.session_state.selected_lang_code)
+                
+                df = st.session_state.chatbot.get_market_overview_df()
+                
+                if not df.empty:
+                    st.session_state.messages.append({"role": "assistant", "content": translated_message, "type": "text"})
+                    st.session_state.messages.append({"role": "assistant", "content": df, "type": "dataframe"})
+                else:
+                    st.session_state.messages.append({"role": "assistant", "content": translate_text("Oops! Can't load the market data right now 📊 Give it another shot!", st.session_state.selected_lang_code), "type": "text"})
+            else:
+                # Regular response
+                st.session_state.messages.append({"role": "assistant", "content": response})
+        
         st.rerun()
 
-if __name__ == "__main__":  # Fixed: __main__ instead of _main_
+    # Back to welcome page button
+    st.markdown("<div style='text-align: center; margin-top: 2rem;'>", unsafe_allow_html=True)
+    if st.button("Go back to Welcome Page", key="back_to_welcome"):
+        st.session_state.page = "welcome"
+        st.rerun()
+    st.markdown("</div>", unsafe_allow_html=True)
+
+
+def main():
+    """Main function to run the Streamlit application."""
+    
+    # --- Session State Initialization ---
+    if 'dark_mode' not in st.session_state:
+        st.session_state.dark_mode = True
+    if 'animations_enabled' not in st.session_state:
+        st.session_state.animations_enabled = True
+    if 'chatbot' not in st.session_state:
+        st.session_state.chatbot = None
+    if 'messages' not in st.session_state:
+        st.session_state.messages = []
+    if 'selected_lang_code' not in st.session_state:
+        st.session_state.selected_lang_code = 'en'
+    if 'page' not in st.session_state:
+        st.session_state.page = "welcome"
+    
+    # Apply theme CSS
+    st.markdown(get_theme_css(st.session_state.dark_mode, st.session_state.animations_enabled), unsafe_allow_html=True)
+
+    # Initialize chatbot instance if needed and on chatbot page
+    if st.session_state.page == "chatbot" and st.session_state.chatbot is None:
+        try:
+            st.session_state.chatbot = CryptoChatbot(GEMINI_API_KEY)
+            st.markdown("""
+            <div class="status-success glow-text">
+            ✅ CryptoMind AI: Ready!<br>
+            🧠 AI brain loaded<br>
+            🔗 Connected to crypto data
+            </div>
+            """, unsafe_allow_html=True)
+        except Exception as e:
+            st.markdown(f"""
+            <div class="status-error">
+            ❌ <strong>UH OH!</strong><br>
+            Something's not working: {str(e)}<br><br>
+            <strong>Try This:</strong><br>
+            • Check your internet<br>
+            • Make sure the API key is right<br>
+            • Refresh the page
+            </div>
+            """, unsafe_allow_html=True)
+            return
+
+    # Page navigation logic
+    if st.session_state.page == "welcome":
+        welcome_page()
+    elif st.session_state.page == "chatbot":
+        chatbot_page()
+    elif st.session_state.page == "login":
+        st.info("Login page coming soon!")
+        if st.button("Back to Welcome"):
+            st.session_state.page = "welcome"
+            st.rerun()
+    elif st.session_state.page == "about":
+        st.info("About page coming soon!")
+        if st.button("Back to Welcome"):
+            st.session_state.page = "welcome"
+            st.rerun()
+    elif st.session_state.page == "signup":
+        st.info("Sign up page coming soon!")
+        if st.button("Back to Welcome"):
+            st.session_state.page = "welcome"
+            st.rerun()
+
+# FIXED: Double underscores for main guard
+if __name__ == "__main__":
     main()
