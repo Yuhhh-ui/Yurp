@@ -220,21 +220,22 @@ class CryptoChatbot:
                 context += f"Kryptonic: {content}\n"
         
         return context
-    def ask_ai(self, user_question, conversation_history):
-    """
-    Ask Gemini AI about cryptocurrency topics with conversation memory.
-    
-    The model now generates a response in English, which is then translated.
-    This removes ambiguity from the prompt and ensures consistent translation.
-    """
-    try:
-        market_context = self.get_current_market_data()
-        conversation_context = self.build_conversation_context(conversation_history)
+
+def ask_ai(self, user_question, conversation_history):
+        """
+        Ask Gemini AI about cryptocurrency topics with conversation memory.
         
-        # Check if this is the first interaction
-        is_first_interaction = len([msg for msg in conversation_history if msg["role"] == "user"]) == 0
-        
-        base_prompt = f"""You are "Kryptonic," a super chill Gen Z crypto expert who talks like a real person having a casual conversation with a friend. You're knowledgeable but keep it fun and natural.
+        The model now generates a response in English, which is then translated.
+        This removes ambiguity from the prompt and ensures consistent translation.
+        """
+        try:
+            market_context = self.get_current_market_data()
+            conversation_context = self.build_conversation_context(conversation_history)
+            
+            # Check if this is the first interaction
+            is_first_interaction = len([msg for msg in conversation_history if msg["role"] == "user"]) == 0
+            
+            base_prompt = f"""You are "Kryptonic," a super chill Gen Z crypto expert who talks like a real person having a casual conversation with a friend. You're knowledgeable but keep it fun and natural.
 
 CONVERSATION STYLE:
 - Talk like you're texting a friend - use "heyyyy", "yooo", "omggg", "ngl", "fr fr"
@@ -280,13 +281,13 @@ User Question: {user_question}
 
 Respond naturally and conversationally:"""
 
-        response = self.model.generate_content(base_prompt)
-        
-        clean_response = remove_html_tags(response.text)
-        return clean_response
-        
-    except Exception as e:
-        return f"Oops! Something went wrong on my end 😅 Try asking again in a second: {str(e)}"
+            response = self.model.generate_content(base_prompt)
+            
+            clean_response = remove_html_tags(response.text)
+            return clean_response
+            
+        except Exception as e:
+            return f"Oops! Something went wrong on my end 😅 Try asking again in a second: {str(e)}"
     
     def handle_price_query(self, coin_id):
         """Handle price-related queries - same as app.py style"""
