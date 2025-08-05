@@ -105,7 +105,8 @@ def remove_html_tags(text):
 
 class CryptoChatbot:
     """A chatbot class that fetches real-time crypto data and answers user queries."""
-    def __init__(self, gemini_api_key):  # Fixed: __init__ instead of _init_
+    
+    def __init__(self, gemini_api_key):
         # Configure Gemini API
         genai.configure(api_key=gemini_api_key)
         
@@ -221,7 +222,7 @@ class CryptoChatbot:
         
         return context
 
-def ask_ai(self, user_question, conversation_history):
+    def ask_ai(self, user_question, conversation_history):
         """
         Ask Gemini AI about cryptocurrency topics with conversation memory.
         
@@ -289,7 +290,7 @@ Respond naturally and conversationally:"""
         except Exception as e:
             return f"Oops! Something went wrong on my end 😅 Try asking again in a second: {str(e)}"
     
-def handle_price_query(self, coin_id):
+    def handle_price_query(self, coin_id):
         """Handle price-related queries - same as app.py style"""
         data = self.get_crypto_price(coin_id)
         if data and coin_id in data:
@@ -313,7 +314,7 @@ Remember: Crypto prices change super fast! ⚡"""
         else:
             return f"Hmm, couldn't grab the price for {coin_id} right now 🤔 Maybe try again in a bit?"
     
-def handle_trending_query(self):
+    def handle_trending_query(self):
         """Handle trending coins query - same as app.py style"""
         trending_data = self.get_trending_coins()
         if trending_data and 'coins' in trending_data:
@@ -327,7 +328,7 @@ def handle_trending_query(self):
         else:
             return "Can't get the trending list right now 😕 Try again in a moment!"
     
-def process_query(self, user_input, language_code, conversation_history):
+    def process_query(self, user_input, language_code, conversation_history):
         """Process user query and return appropriate response."""
         user_input_lower = user_input.lower()
         
