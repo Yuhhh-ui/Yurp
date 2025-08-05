@@ -1134,5 +1134,5 @@ def main():
             st.session_state.page = "welcome"
             st.rerun()
 
-if __name__ == "_main_":
+if _name_ == "_main_":
     main()
