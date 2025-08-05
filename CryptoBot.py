@@ -105,7 +105,7 @@ def remove_html_tags(text):
 
 class CryptoChatbot:
     """A chatbot class that fetches real-time crypto data and answers user queries."""
-    def _init_(self, gemini_api_key):
+    def __init__(self, gemini_api_key):  # Fixed: __init__ instead of _init_
         # Configure Gemini API
         genai.configure(api_key=gemini_api_key)
         
@@ -1084,7 +1084,7 @@ def main():
     if st.session_state.show_animation_warning and st.session_state.modal_shown_time is None:
         st.session_state.modal_shown_time = time.time()
         
-    if st.session_state.show_animation_warning and time.time() - st.session_state.modal_shown_time > 5:
+    if st.session_state.show_animation_warning and st.session_state.modal_shown_time and time.time() - st.session_state.modal_shown_time > 5:
         st.session_state.show_animation_warning = False
         st.session_state.modal_shown_time = None # Reset the timer
         st.rerun() # Force a rerun to hide the modal
@@ -1134,5 +1134,5 @@ def main():
             st.session_state.page = "welcome"
             st.rerun()
 
-if _name_ == "_main_":
+if __name__ == "__main__":
     main()
